@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- ===== SEO Meta ===== -->
+<meta name="description" content="Build a multi-agent AI system with LangGraph, Tavily, and OpenRouter. Three specialised agents — supervisor, researcher, thinker — coordinated by a deterministic state graph. Full code, no hallucinated routing." />
+<meta name="keywords" content="multi-agent AI tutorial, LangGraph tutorial, agent orchestration, Tavily search, OpenRouter, supervisor agent, RAG agents, state graph, deterministic routing, Shaik Maricar" />
+<meta name="author" content="Shaik Maricar" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="googlebot" content="index, follow" />
+<meta name="theme-color" content="#0e0d0c" />
+<link rel="canonical" href="https://shaikmaricar.com/multi-agent/" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='30%' cy='30%' r='80%'><stop offset='0%' stop-color='%23e8b04a'/><stop offset='70%' stop-color='%23d97862'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/><text x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-weight='600' font-size='26' fill='%230e0d0c'>SM</text></svg>" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Shaik Maricar" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:url" content="https://shaikmaricar.com/multi-agent/" />
+<meta property="og:title" content="A Team of Cooperating AI Agents — Multi-Agent System Walkthrough" />
+<meta property="og:description" content="Build a multi-agent AI system with LangGraph, Tavily, and OpenRouter. Three specialised agents — supervisor, researcher, thinker — coordinated by a deterministic state graph. Full code, no hallucinated routing." />
+<meta property="og:image" content="https://shaikmaricar.com/og-images/multi-agent.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="A Team of Cooperating AI Agents — Multi-Agent System Walkthrough" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@ShaikMaricar" />
+<meta name="twitter:creator" content="@ShaikMaricar" />
+<meta name="twitter:title" content="A Team of Cooperating AI Agents — Multi-Agent System Walkthrough" />
+<meta name="twitter:description" content="Build a multi-agent AI system with LangGraph, Tavily, and OpenRouter. Three specialised agents — supervisor, researcher, thinker — coordinated by a deterministic state graph. Full code, no hallucinated routing." />
+<meta name="twitter:image" content="https://shaikmaricar.com/og-images/multi-agent.png" />
+<meta name="twitter:image:alt" content="A Team of Cooperating AI Agents — Multi-Agent System Walkthrough" />
+
+<title>A Team of Cooperating AI Agents — Field Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300..800&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0e0d0c;
+    --surface: #1a1815;
+    --surface-2: #221f1b;
+    --surface-3: #2a2620;
+    --border: #2c2924;
+    --border-soft: #221f1a;
+    --ink: #ece6d8;
+    --ink-soft: #b8b0a0;
+    --ink-muted: #807868;
+    --amber: #e8b04a;
+    --amber-soft: #f3cb7d;
+    --teal: #6fbfb0;
+    --teal-soft: #98d4c7;
+    --rose: #d97862;
+    --rose-soft: #e89580;
+    --plum: #9a86b8;
+
+    --font-display: "Fraunces", "Times New Roman", serif;
+    --font-body: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    font-weight: 400;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* grain overlay */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 100;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  ::selection { background: var(--amber); color: var(--bg); }
+
+  .glow {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.32;
+  }
+
+  .container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 32px; position: relative; }
+  .container--narrow { max-width: 760px; }
+  .container--reading { max-width: 680px; }
+
+  /* ----- Top bar ----- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(14, 13, 12, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .topbar-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px; max-width: 1280px; margin: 0 auto;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-style: italic;
+    font-size: 21px;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--amber), var(--rose) 70%);
+    box-shadow: 0 0 24px rgba(232, 176, 74, 0.4);
+  }
+  .topbar-meta {
+    display: flex; gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  @media (max-width: 640px) { .topbar-meta { display: none; } }
+
+  /* ----- Hero ----- */
+  .hero {
+    position: relative;
+    padding: 80px 0 60px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero .glow-1 { width: 600px; height: 600px; background: var(--amber); top: -180px; left: -150px; }
+  .hero .glow-2 { width: 500px; height: 500px; background: var(--teal); top: 80px; right: -200px; opacity: 0.18; }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--amber);
+    margin-bottom: 28px;
+  }
+  .eyebrow::before {
+    content: "§";
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-style: italic;
+    margin-right: 4px;
+    color: var(--amber);
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(44px, 6.8vw, 80px);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    margin-bottom: 32px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--amber);
+  }
+
+  .hero .deck {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 36px;
+    max-width: 540px;
+  }
+
+  .stack { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 36px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+  .chip:nth-child(2) .chip-dot { background: var(--rose); }
+  .chip:nth-child(3) .chip-dot { background: var(--teal); }
+  .chip:nth-child(4) .chip-dot { background: var(--plum); }
+  .chip:nth-child(5) .chip-dot { background: var(--amber-soft); }
+
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px 36px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    max-width: 480px;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .meta-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-muted);
+  }
+  .meta-value {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* ----- Hero diagram ----- */
+  .hero-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    position: relative;
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.5);
+  }
+  .hero-diagram::before {
+    content: "FIG. 01 — SYSTEM ARCHITECTURE";
+    position: absolute;
+    top: 14px; left: 32px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--ink-muted);
+  }
+  .hero-diagram svg { width: 100%; height: auto; display: block; margin-top: 20px; }
+
+  /* ----- TOC ----- */
+  .toc-section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 56px;
+    row-gap: 4px;
+  }
+  @media (max-width: 720px) { .toc-grid { grid-template-columns: 1fr; } }
+  .toc-item {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px dotted var(--border);
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 15.5px;
+    transition: color 0.2s, padding-left 0.2s;
+  }
+  .toc-item:hover {
+    color: var(--amber);
+    padding-left: 6px;
+  }
+  .toc-num {
+    font-family: var(--font-mono);
+    color: var(--ink-muted);
+    font-size: 12px;
+    align-self: center;
+  }
+  .toc-title { font-family: var(--font-display); font-size: 18px; align-self: center; letter-spacing: -0.01em; }
+  .toc-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    align-self: center;
+  }
+
+  /* ----- Section / Chapter ----- */
+  section.chapter {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .chapter-header { margin-bottom: 36px; }
+  .chapter-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .chapter-num::before {
+    content: "§";
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 24px;
+    color: var(--amber);
+  }
+  .chapter-num span:last-child { color: var(--ink-muted); font-size: 11px; }
+
+  .chapter h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(32px, 4.6vw, 50px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+  .chapter h2 em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+  .chapter h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 23px;
+    letter-spacing: -0.01em;
+    margin: 38px 0 14px;
+    color: var(--ink);
+  }
+  .chapter h3 .marker {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 13px;
+    color: var(--amber);
+    margin-right: 10px;
+    font-weight: 400;
+  }
+
+  .chapter p {
+    margin-bottom: 18px;
+    color: var(--ink-soft);
+    max-width: 660px;
+  }
+  .chapter p strong { color: var(--ink); font-weight: 600; }
+
+  .chapter p code, .chapter li code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: var(--amber-soft);
+  }
+
+  .lead {
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-style: italic;
+    line-height: 1.45;
+    color: var(--ink);
+    margin-bottom: 32px !important;
+    font-weight: 400;
+    max-width: 640px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ----- Code blocks ----- */
+  .code-block {
+    margin: 26px 0;
+    background: #0a0908;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.7);
+  }
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .code-lang { color: var(--amber); }
+  .code-body {
+    padding: 22px 24px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.75;
+    color: #d8d2c4;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 0;
+  }
+
+  /* Python syntax highlighting (matched to local-llm tutorial) */
+  .py-keyword { color: var(--rose); }
+  .py-builtin { color: var(--plum); }
+  .py-string  { color: var(--amber-soft); }
+  .py-number  { color: var(--teal); }
+  .py-comment { color: var(--ink-muted); font-style: italic; }
+  .py-fn      { color: var(--teal-soft); }
+  .py-class   { color: var(--amber); }
+  .py-decorator { color: var(--rose-soft); font-style: italic; }
+  .py-self    { color: var(--ink-soft); font-style: italic; }
+
+  /* ----- Agent roster table ----- */
+  .agent-table {
+    margin: 32px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .agent-row {
+    display: grid;
+    grid-template-columns: 90px 220px 1fr;
+    gap: 24px;
+    padding: 24px 26px;
+    border-bottom: 1px solid var(--border-soft);
+    align-items: center;
+  }
+  @media (max-width: 640px) {
+    .agent-row { grid-template-columns: 1fr; gap: 10px; padding: 20px 22px; }
+  }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-row.header {
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-muted);
+    padding: 14px 26px;
+  }
+  .agent-icon {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 28px;
+    font-weight: 400;
+  }
+  .agent-icon.supervisor {
+    background: var(--amber);
+    color: var(--bg);
+  }
+  .agent-icon.research {
+    background: var(--rose);
+    color: var(--bg);
+  }
+  .agent-icon.computation {
+    background: var(--teal);
+    color: var(--bg);
+  }
+  .agent-name {
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .agent-role {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin-top: 3px;
+  }
+  .agent-desc { color: var(--ink-soft); font-size: 15px; }
+
+  /* ----- Callouts ----- */
+  .callout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    padding: 18px 22px;
+    margin: 24px 0;
+    background: var(--surface);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+  }
+  .callout.note { border-left-color: var(--amber); }
+  .callout.warn { border-left-color: var(--rose); }
+  .callout.tip  { border-left-color: var(--teal); }
+  .callout-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: rgba(232, 176, 74, 0.15);
+    color: var(--amber);
+  }
+  .callout.warn .callout-icon { background: rgba(217, 120, 98, 0.15); color: var(--rose); }
+  .callout.tip  .callout-icon { background: rgba(111, 191, 176, 0.15); color: var(--teal); }
+  .callout-body { font-size: 15px; color: var(--ink-soft); line-height: 1.6; }
+  .callout-body strong { color: var(--ink); }
+  .callout-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  /* ----- Inline file box (.env preview) ----- */
+  .file-box {
+    background: #0a0908;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 22px 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--ink);
+  }
+  .file-box-head {
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .file-box-head::before {
+    content: ""; width: 8px; height: 8px;
+    background: var(--rose);
+    border-radius: 50%;
+  }
+  .file-box .key { color: var(--amber); }
+
+  /* ----- Trace diagram ----- */
+  .trace {
+    margin: 32px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .trace-head {
+    padding: 14px 22px;
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+  }
+  .trace-step {
+    display: grid;
+    grid-template-columns: 60px 140px 1fr;
+    gap: 20px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-soft);
+    align-items: start;
+  }
+  .trace-step:last-child { border-bottom: none; }
+  @media (max-width: 640px) {
+    .trace-step { grid-template-columns: 50px 1fr; }
+    .trace-actor { grid-column: 2; }
+    .trace-action { grid-column: 2; margin-top: 4px; }
+  }
+  .trace-num {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 36px;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .trace-actor {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .trace-actor .pill {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    background: var(--surface-3);
+    color: var(--ink-soft);
+    width: fit-content;
+    letter-spacing: 0.1em;
+  }
+  .trace-actor.supervisor  .pill { background: var(--amber); color: var(--bg); }
+  .trace-actor.research    .pill { background: var(--rose); color: var(--bg); }
+  .trace-actor.computation .pill { background: var(--teal); color: var(--bg); }
+  .trace-actor.end         .pill { background: var(--ink); color: var(--bg); }
+  .trace-action {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    padding-top: 4px;
+  }
+  .trace-action code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--surface-2);
+    padding: 1px 7px;
+    border-radius: 3px;
+    color: var(--amber-soft);
+    border: 1px solid var(--border);
+  }
+
+  /* ----- Two-column with side note ----- */
+  .with-note {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 32px;
+    margin: 24px 0;
+  }
+  @media (max-width: 820px) { .with-note { grid-template-columns: 1fr; } }
+  .side-note {
+    font-size: 14px;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    padding-top: 8px;
+    border-top: 2px solid var(--amber);
+    font-family: var(--font-display);
+    font-style: italic;
+  }
+  .side-note strong {
+    font-style: normal;
+    font-family: var(--font-body);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--amber);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .side-note code {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 12.5px;
+    color: var(--amber-soft);
+  }
+
+  /* ----- Outro / horizons ----- */
+  .horizons {
+    padding: 100px 0;
+    background: linear-gradient(180deg, transparent 0%, var(--surface) 80%);
+    border-bottom: none;
+  }
+  .horizon-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+    margin-top: 36px;
+  }
+  @media (max-width: 700px) { .horizon-grid { grid-template-columns: 1fr; } }
+  .horizon-card {
+    padding: 28px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .horizon-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--amber);
+  }
+  .horizon-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .horizon-card h4 {
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .horizon-card p {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .horizon-card code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--amber-soft);
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  /* ----- Footer ----- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 60px 0 40px;
+    color: var(--ink-muted);
+    font-size: 14px;
+    background: var(--bg);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 36px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 480px) { .footer-grid { grid-template-columns: 1fr; } }
+  footer h5 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+  footer ul { list-style: none; }
+  footer li { margin-bottom: 8px; }
+  footer a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--amber); }
+  .footer-bottom {
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* ----- Reveal ----- */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.7s, transform 0.7s; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ----- SVG diagram styles ----- */
+  .arch-svg .node-label {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 14px;
+    fill: var(--bg);
+  }
+  .arch-svg .node-role {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    fill: var(--ink-soft);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .arch-svg .arrow-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    fill: var(--ink-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ============================================================
+   * MOBILE HARDENING (added by audit)
+   *
+   * Universal protections against horizontal scroll on phones.
+   * Read top-down: each rule has a specific reason.
+   * ============================================================ */
+
+  /* (1) Global safety net. Page never scrolls horizontally. If any
+         child overflows, it gets clipped — far better than the user
+         seeing a broken layout. */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* (2) Containers cap at viewport width. The padding stays, the
+         content area shrinks. */
+  .container, .container--narrow, .container--reading {
+    max-width: 100%;
+  }
+
+  /* (3) THE big one — wide <pre> in grid/flex parents.
+         By default, grid/flex items have min-width: auto, which lets
+         them expand to fit their content (including non-wrapping <pre>).
+         Setting min-width: 0 makes them respect the column track. */
+  .step-body, .step,
+  .chapter, .chapter > *,
+  .section-header,
+  .container > *,
+  .container--narrow > *,
+  .prose > *,
+  article {
+    min-width: 0;
+  }
+
+  /* (4) Code blocks and mockups: cap at 100% of their parent and
+         scroll horizontally inside themselves rather than pushing
+         the parent wider. */
+  .code-block, .mockup, .notebook, .file-box, .trace, .vscode,
+  .agent-table, .stack-table, .stats-panel, .command-palette {
+    max-width: 100%;
+  }
+  .code-body, .mockup-body, .cell-content, .code-block-body {
+    max-width: 100%;
+    /* white-space: pre is preserved; overflow handles long lines */
+  }
+
+  /* (5) Glow orbs: ensure their host section clips them. The hero
+         already has overflow:hidden but tutorial sections don't. */
+  section { overflow: hidden; }
+  /* But sections that intentionally allow sticky children must still
+     position correctly — sticky topbar is in a <header>, not a section,
+     so it's safe. */
+
+  /* (6) Hero typography scales down more aggressively. The big italic
+         display H1 was clipping awkwardly on 360-375px phones. */
+  @media (max-width: 480px) {
+    .hero h1, h1.h-display {
+      font-size: clamp(40px, 11vw, 64px);
+      line-height: 1.0;
+    }
+    .hero .deck, .hero-deck {
+      font-size: 17px;
+    }
+    .lead {
+      font-size: 19px;
+    }
+    h2, .h-section, .chapter h2, section h2 {
+      font-size: clamp(28px, 7vw, 38px);
+    }
+  }
+
+  /* (7) Tighter container padding on small phones to give content
+         more breathing room. */
+  @media (max-width: 480px) {
+    .container, .container--narrow, .container--reading {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    section {
+      padding: 56px 0;
+    }
+    .hero {
+      padding: 60px 0 40px;
+    }
+  }
+
+  /* (8) Code and terminal bodies use a smaller font on phones so more
+         characters fit before horizontal scroll kicks in. */
+  @media (max-width: 480px) {
+    .code-body, .mockup-body, .cell-content, .code-block-body {
+      font-size: 12.5px;
+      padding: 16px 18px;
+    }
+    .code-header, .mockup-header {
+      padding: 10px 14px;
+      font-size: 11px;
+    }
+  }
+
+  /* (9) Tap-target safety. Anything tappable should be at least 44px
+         tall — Apple's HIG and Google's Material both agree on this. */
+  @media (max-width: 720px) {
+    .btn { padding: 14px 22px; min-height: 44px; }
+    .topnav a, .footer-links a {
+      padding: 8px 0;
+      display: inline-block;
+    }
+    .toc-item, .toc-item-row {
+      padding: 14px 0;
+    }
+    .chip, .tool {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .contact-chip {
+      min-height: 40px;
+    }
+  }
+
+  /* (10) Stats panel grid (profile page) — was 2 cols, becomes 2 cols
+          still but with tighter padding. */
+  @media (max-width: 480px) {
+    .stats-grid .stat {
+      padding: 18px 14px;
+    }
+    .stat-num {
+      font-size: 36px;
+    }
+    .stat-label {
+      font-size: 9.5px;
+    }
+  }
+
+  /* (11) Tutorial step layout — keep numbers visible but smaller,
+          and stack on phones (this was already done but the gap was
+          too big). */
+  @media (max-width: 480px) {
+    .step {
+      gap: 16px !important;
+      padding: 48px 0 !important;
+    }
+    .step-number {
+      font-size: 56px !important;
+    }
+  }
+
+  /* (12) Trace diagram — already responsive, but ensure code chips
+          inside trace-action don't overflow. */
+  .trace-action code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (13) Inline code in callouts — was overflowing the callout body. */
+  .callout-body code, .callout code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (14) Long URLs in contact chips wrap rather than overflow. */
+  .contact-chip {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (15) Library / volume cards — long titles can wrap freely now. */
+  .volume-title, .h-display, .h-section {
+    overflow-wrap: break-word;
+  }
+
+  /* (16) Footer bottom row stacks on phones so it doesn't get cramped. */
+  @media (max-width: 480px) {
+    .footer-bottom, .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "A Team of Cooperating AI Agents — Multi-Agent System Walkthrough",
+  "description": "Build a multi-agent AI system with LangGraph, Tavily, and OpenRouter. Three specialised agents — supervisor, researcher, thinker — coordinated by a deterministic state graph. Full code, no hallucinated routing.",
+  "image": "https://shaikmaricar.com/og-images/multi-agent.png",
+  "url": "https://shaikmaricar.com/multi-agent/",
+  "mainEntityOfPage": {"@type": "WebPage", "@id": "https://shaikmaricar.com/multi-agent/"},
+  "datePublished": "2026-05-02",
+  "dateModified": "2026-05-02",
+  "inLanguage": "en-US",
+  "author": {
+    "@type": "Person",
+    "name": "Shaik Maricar",
+    "url": "https://shaikmaricar.com"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "Shaik Maricar",
+    "url": "https://shaikmaricar.com"
+  },
+  "isAccessibleForFree": true,
+  "keywords": "multi-agent AI tutorial, LangGraph tutorial, agent orchestration, Tavily search, OpenRouter, supervisor agent, RAG agents, state graph, deterministic routing, Shaik Maricar"
+}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span>Field Manual</span>
+    </div>
+    <div class="topbar-meta">
+      <span>VOL.&nbsp;02</span>
+      <span>MULTI-AGENT&nbsp;SYSTEMS</span>
+      <span>EST.&nbsp;READ&nbsp;25&nbsp;MIN</span>
+    </div>
+  </div>
+</header>
+
+<!-- =========== HERO =========== -->
+<section class="hero">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Field Manual / Volume 02</div>
+        <h1>A team of <em>cooperating</em><br>AI&nbsp;agents.</h1>
+        <p class="deck">
+          Building three specialised agents — a supervisor, a researcher, and a thinker —
+          that work together as a state graph. Deterministic routing, no hallucinated
+          control flow, no infinite loops.
+        </p>
+
+        <div class="stack">
+          <span class="chip"><span class="chip-dot"></span>LangGraph</span>
+          <span class="chip"><span class="chip-dot"></span>Tavily</span>
+          <span class="chip"><span class="chip-dot"></span>OpenRouter</span>
+          <span class="chip"><span class="chip-dot"></span>LangChain</span>
+          <span class="chip"><span class="chip-dot"></span>Python 3.10+</span>
+        </div>
+
+        <div class="hero-meta">
+          <div class="meta-item">
+            <span class="meta-label">Difficulty</span>
+            <span class="meta-value">Intermediate</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Duration</span>
+            <span class="meta-value">~25 minutes</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Pattern</span>
+            <span class="meta-value">Supervisor + Workers</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Deps</span>
+            <span class="meta-value">5 packages</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-diagram">
+        <svg class="arch-svg" viewBox="0 0 460 360" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#b8b0a0"/>
+            </marker>
+            <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#e8b04a"/>
+            </marker>
+          </defs>
+
+          <!-- subtle grid -->
+          <g opacity="0.18">
+            <line x1="0" y1="60"  x2="460" y2="60"  stroke="#807868" stroke-width="0.5" stroke-dasharray="2 4"/>
+            <line x1="0" y1="180" x2="460" y2="180" stroke="#807868" stroke-width="0.5" stroke-dasharray="2 4"/>
+            <line x1="0" y1="300" x2="460" y2="300" stroke="#807868" stroke-width="0.5" stroke-dasharray="2 4"/>
+          </g>
+
+          <!-- User Query input -->
+          <g transform="translate(40, 30)">
+            <rect width="120" height="36" rx="3" fill="#221f1b" stroke="#b8b0a0" stroke-width="1"/>
+            <text x="60" y="18" text-anchor="middle" class="node-role" dy="0.35em">User Query</text>
+          </g>
+          <path d="M 100 66 L 100 130 L 200 165" stroke="#b8b0a0" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+
+          <!-- Supervisor (amber, center) -->
+          <g transform="translate(180, 150)">
+            <circle cx="50" cy="50" r="50" fill="#e8b04a" stroke="#f3cb7d" stroke-width="1.5"/>
+            <text x="50" y="42" text-anchor="middle" class="node-label" dy="0.35em" style="font-size:13px">Supervisor</text>
+            <text x="50" y="62" text-anchor="middle" class="node-role" fill="#5a4a26" dy="0.35em" style="font-size:8px">Manager</text>
+          </g>
+
+          <!-- Research (rose, left) -->
+          <g transform="translate(20, 170)">
+            <circle cx="40" cy="40" r="40" fill="#d97862" stroke="#e89580" stroke-width="1.5"/>
+            <text x="40" y="34" text-anchor="middle" class="node-label" dy="0.35em" style="font-size:11px">Research</text>
+            <text x="40" y="50" text-anchor="middle" class="node-role" fill="#5e2e22" dy="0.35em" style="font-size:8px">Searches web</text>
+          </g>
+
+          <!-- Computation (teal, right) -->
+          <g transform="translate(360, 170)">
+            <circle cx="40" cy="40" r="40" fill="#6fbfb0" stroke="#98d4c7" stroke-width="1.5"/>
+            <text x="40" y="34" text-anchor="middle" class="node-label" dy="0.35em" style="font-size:11px">Computation</text>
+            <text x="40" y="50" text-anchor="middle" class="node-role" fill="#2c4f48" dy="0.35em" style="font-size:8px">Reasons over data</text>
+          </g>
+
+          <!-- arrows: supervisor <-> research -->
+          <path d="M 175 200 L 105 205" stroke="#b8b0a0" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+          <path d="M 100 220 L 175 215" stroke="#b8b0a0" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+          <text x="138" y="195" class="arrow-label" text-anchor="middle">goto</text>
+          <text x="138" y="232" class="arrow-label" text-anchor="middle">return</text>
+
+          <!-- arrows: supervisor <-> computation -->
+          <path d="M 285 200 L 355 205" stroke="#b8b0a0" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+          <path d="M 360 220 L 285 215" stroke="#b8b0a0" stroke-width="1.2" fill="none" marker-end="url(#arrow)"/>
+          <text x="320" y="195" class="arrow-label" text-anchor="middle">goto</text>
+          <text x="320" y="232" class="arrow-label" text-anchor="middle">return</text>
+
+          <!-- final answer output -->
+          <g transform="translate(170, 305)">
+            <rect width="120" height="36" rx="3" fill="#ece6d8" stroke="#ece6d8" stroke-width="1"/>
+            <text x="60" y="18" text-anchor="middle" class="node-role" fill="#0e0d0c" dy="0.35em">Final Answer</text>
+          </g>
+          <path d="M 230 250 L 230 305" stroke="#e8b04a" stroke-width="1.5" fill="none" marker-end="url(#arrow-amber)" stroke-dasharray="3 3"/>
+          <text x="245" y="280" class="arrow-label" fill="#e8b04a">END</text>
+
+          <!-- Shared State indicator -->
+          <g transform="translate(345, 30)" opacity="0.7">
+            <rect width="95" height="36" rx="3" fill="none" stroke="#807868" stroke-width="1" stroke-dasharray="3 2"/>
+            <text x="47" y="18" text-anchor="middle" class="node-role" dy="0.35em">Shared State</text>
+          </g>
+          <path d="M 392 66 L 290 175" stroke="#807868" stroke-width="0.8" fill="none" stroke-dasharray="2 3" opacity="0.5"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== TOC =========== -->
+<section class="toc-section">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:18px">Contents</div>
+    <div class="toc-grid">
+      <a href="#ch-1" class="toc-item">
+        <span class="toc-num">01</span>
+        <span class="toc-title">What we're building</span>
+        <span class="toc-tag">Overview</span>
+      </a>
+      <a href="#ch-2" class="toc-item">
+        <span class="toc-num">02</span>
+        <span class="toc-title">The imports</span>
+        <span class="toc-tag">Setup</span>
+      </a>
+      <a href="#ch-3" class="toc-item">
+        <span class="toc-num">03</span>
+        <span class="toc-title">Environment setup</span>
+        <span class="toc-tag">Setup</span>
+      </a>
+      <a href="#ch-4" class="toc-item">
+        <span class="toc-num">04</span>
+        <span class="toc-title">Configuring the LLM</span>
+        <span class="toc-tag">Config</span>
+      </a>
+      <a href="#ch-5" class="toc-item">
+        <span class="toc-num">05</span>
+        <span class="toc-title">The shared state</span>
+        <span class="toc-tag">State</span>
+      </a>
+      <a href="#ch-6" class="toc-item">
+        <span class="toc-num">06</span>
+        <span class="toc-title">Defining the tool</span>
+        <span class="toc-tag">Tools</span>
+      </a>
+      <a href="#ch-7" class="toc-item">
+        <span class="toc-num">07</span>
+        <span class="toc-title">The supervisor agent</span>
+        <span class="toc-tag">Agents</span>
+      </a>
+      <a href="#ch-8" class="toc-item">
+        <span class="toc-num">08</span>
+        <span class="toc-title">The research agent</span>
+        <span class="toc-tag">Agents</span>
+      </a>
+      <a href="#ch-9" class="toc-item">
+        <span class="toc-num">09</span>
+        <span class="toc-title">The computation agent</span>
+        <span class="toc-tag">Agents</span>
+      </a>
+      <a href="#ch-10" class="toc-item">
+        <span class="toc-num">10</span>
+        <span class="toc-title">Building the graph</span>
+        <span class="toc-tag">Wiring</span>
+      </a>
+      <a href="#ch-11" class="toc-item">
+        <span class="toc-num">11</span>
+        <span class="toc-title">Running it</span>
+        <span class="toc-tag">Execute</span>
+      </a>
+      <a href="#ch-12" class="toc-item">
+        <span class="toc-num">12</span>
+        <span class="toc-title">The execution trace</span>
+        <span class="toc-tag">Walkthrough</span>
+      </a>
+      <a href="#ch-13" class="toc-item">
+        <span class="toc-num">13</span>
+        <span class="toc-title">Where to go from here</span>
+        <span class="toc-tag">Horizons</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 1 =========== -->
+<section class="chapter" id="ch-1">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 01</span><span>Overview</span></div>
+      <h2>What we're <em>building</em></h2>
+    </header>
+
+    <p class="lead">
+      A small "team" of three specialised AI agents that work together to answer a user's
+      question. Instead of one giant LLM call trying to do everything, we split the work.
+    </p>
+
+    <div class="agent-table">
+      <div class="agent-row header">
+        <div>Role</div>
+        <div>Agent</div>
+        <div>Responsibility</div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-icon supervisor">S</div>
+        <div>
+          <div class="agent-name">Supervisor</div>
+          <div class="agent-role">The manager</div>
+        </div>
+        <div class="agent-desc">Decides who works next based on the current state.</div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-icon research">R</div>
+        <div>
+          <div class="agent-name">Research Agent</div>
+          <div class="agent-role">The researcher</div>
+        </div>
+        <div class="agent-desc">Searches the web using Tavily for up-to-date facts.</div>
+      </div>
+      <div class="agent-row">
+        <div class="agent-icon computation">C</div>
+        <div>
+          <div class="agent-name">Computation Agent</div>
+          <div class="agent-role">The thinker</div>
+        </div>
+        <div class="agent-desc">Uses an LLM to reason over the data and produce a final answer.</div>
+      </div>
+    </div>
+
+    <p>
+      The whole system is wired together as a <strong>state graph</strong> using LangGraph.
+      Think of it as a flowchart where each box is an agent (a Python function) and the
+      arrows are decided dynamically based on what's currently in the shared "state."
+    </p>
+
+    <h3><span class="marker">i.</span>Why this pattern</h3>
+
+    <p>
+      A single LLM call is fine for trivia like "What's the capital of France?", but real
+      questions often need two distinct skills:
+    </p>
+
+    <ol style="margin: 0 0 18px 24px; color: var(--ink-soft); max-width: 640px;">
+      <li style="margin-bottom: 8px;"><strong>Fetching external information</strong> — e.g. "What is the latest population of Japan?" The LLM doesn't know this; it needs to look it up.</li>
+      <li><strong>Reasoning on top of that data</strong> — e.g. "...and double it." That's arithmetic on the result of step 1.</li>
+    </ol>
+
+    <p>
+      By giving each capability its own agent and letting a supervisor coordinate them,
+      we get a system that is more reliable, easier to debug, and easier to extend (want
+      to add a "code execution agent"? Just add a node).
+    </p>
+
+    <div class="callout">
+      <div class="callout-icon">!</div>
+      <div class="callout-body">
+        <span class="callout-title">Key Design Choice</span>
+        The supervisor uses plain Python <code>if</code>/<code>else</code> logic, <strong>not an LLM</strong>.
+        This is deliberate. LLM-based routers can hallucinate, loop forever, or burn
+        tokens making routing decisions. Deterministic routing is free, fast, and
+        impossible to confuse.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 2 =========== -->
+<section class="chapter" id="ch-2">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 02</span><span>Setup</span></div>
+      <h2>The imports — what each <em>library</em> does</h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>imports</span>
+      </div>
+      <pre class="code-body">
+<span class="py-keyword">from</span> <span class="py-builtin">dotenv</span> <span class="py-keyword">import</span> load_dotenv
+<span class="py-keyword">import</span> <span class="py-builtin">os</span>
+<span class="py-keyword">from</span> <span class="py-builtin">typing</span> <span class="py-keyword">import</span> Literal
+<span class="py-keyword">from</span> <span class="py-builtin">typing_extensions</span> <span class="py-keyword">import</span> TypedDict
+
+<span class="py-keyword">from</span> <span class="py-builtin">langchain_openai</span> <span class="py-keyword">import</span> <span class="py-class">ChatOpenAI</span>
+<span class="py-keyword">from</span> <span class="py-builtin">langchain_core.tools</span> <span class="py-keyword">import</span> tool
+<span class="py-keyword">from</span> <span class="py-builtin">langgraph.graph</span> <span class="py-keyword">import</span> <span class="py-class">StateGraph</span>, END
+<span class="py-keyword">from</span> <span class="py-builtin">langgraph.types</span> <span class="py-keyword">import</span> <span class="py-class">Command</span>
+<span class="py-keyword">from</span> <span class="py-builtin">langchain_community.tools.tavily_search</span> <span class="py-keyword">import</span> <span class="py-class">TavilySearchResults</span>
+      </pre>
+    </div>
+
+    <h3><span class="marker">i.</span>dotenv and os</h3>
+    <p>
+      <code>python-dotenv</code> reads a <code>.env</code> file in your project folder and
+      loads its <code>KEY=value</code> pairs into environment variables. We use this so API
+      keys live in a file you can <code>.gitignore</code> rather than being hard-coded in
+      source. The <code>os</code> module is Python's built-in interface to environment
+      variables — <code>os.getenv("KEY")</code> reads them, <code>os.environ["KEY"] = ...</code>
+      writes them.
+    </p>
+
+    <h3><span class="marker">ii.</span>Literal and TypedDict</h3>
+    <p>
+      These two are about <em>type hints</em>, but they're not just for documentation —
+      LangGraph actually inspects them at runtime.
+    </p>
+    <p>
+      <code>Literal["a", "b", "c"]</code> says "this value can only be one of these exact
+      strings." We use it to declare which nodes a function is allowed to route to.
+      LangGraph reads these annotations to draw the graph's edges, so getting them right
+      is part of the contract.
+    </p>
+    <p>
+      <code>TypedDict</code> defines a dictionary with a fixed set of keys and a known type
+      for each. At runtime it behaves like a regular <code>dict</code>, but type checkers
+      and LangGraph use the schema to validate state updates. We import from
+      <code>typing_extensions</code> (not <code>typing</code>) for the most up-to-date
+      version that works across Python versions.
+    </p>
+
+    <h3><span class="marker">iii.</span>ChatOpenAI</h3>
+    <p>
+      LangChain's wrapper for any OpenAI-compatible chat API. The name is misleading —
+      despite being called <code>ChatOpenAI</code>, it works with <strong>any</strong>
+      provider that speaks the OpenAI API format: OpenRouter, Together, Groq, local
+      Ollama, vLLM, and so on. You just point it at a different <code>base_url</code>.
+    </p>
+
+    <h3><span class="marker">iv.</span>The @tool decorator</h3>
+    <p>
+      Turns a regular Python function into a "tool" that an agent can call. It
+      auto-extracts the function's name, docstring, and argument types to build a tool
+      schema the LLM understands. Decorating with <code>@tool</code> is the difference
+      between "a function I can call from Python" and "a capability the agent system
+      knows about."
+    </p>
+
+    <h3><span class="marker">v.</span>StateGraph, END, and Command</h3>
+    <p>
+      These three together are the heart of LangGraph. <code>StateGraph</code> is the
+      directed graph: nodes are functions that read and update a shared state, and edges
+      describe how control flows. <code>END</code> is a special sentinel node meaning
+      "we're done — return the final state." <code>Command</code> is a return value that
+      does two things at once: tells LangGraph <strong>where to go next</strong>
+      (<code>goto=...</code>) and <strong>what to update</strong> in the shared state
+      (<code>update=...</code>). Returning a <code>Command</code> keeps routing logic
+      <em>inside</em> the node, which is much cleaner than configuring it externally.
+    </p>
+
+    <h3><span class="marker">vi.</span>TavilySearchResults</h3>
+    <p>
+      Tavily is a search API built specifically for LLM agents. Unlike scraping Google,
+      it returns clean, summarised text designed to be dropped into prompts.
+      <code>TavilySearchResults</code> is the LangChain wrapper around its REST API.
+    </p>
+    <div class="callout note">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Migration note</span>
+        In newer versions of <code>langchain_community</code> this is being superseded by
+        <code>langchain_tavily.TavilySearch</code>, but the older import still works for
+        the moment.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 3 =========== -->
+<section class="chapter" id="ch-3">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 03</span><span>Setup</span></div>
+      <h2>Environment <em>setup</em></h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>load env vars</span>
+      </div>
+      <pre class="code-body">
+load_dotenv()
+os.environ[<span class="py-string">"OPENROUTER_API_KEY"</span>] = os.getenv(<span class="py-string">"OPENROUTER_API_KEY"</span>)
+os.environ[<span class="py-string">"TAVILY_API_KEY"</span>] = os.getenv(<span class="py-string">"TAVILY_API_KEY"</span>)
+      </pre>
+    </div>
+
+    <p>
+      <code>load_dotenv()</code> reads your <code>.env</code> file and pushes the variables
+      into <code>os.environ</code>. After this call, anything in <code>.env</code> is
+      accessible via <code>os.getenv("KEY_NAME")</code>.
+    </p>
+
+    <p>
+      The next two lines look redundant — we're reading and writing the same variables —
+      but it's a belt-and-braces pattern. Some libraries check <code>os.environ</code>
+      directly rather than going through <code>os.getenv</code> (which is just a safer
+      wrapper). Explicitly assigning to <code>os.environ</code> guarantees the keys are
+      there no matter how the downstream library looks them up.
+    </p>
+
+    <p>Your <code>.env</code> file should look like this:</p>
+
+    <div class="file-box">
+      <div class="file-box-head">.env</div>
+      <span class="key">OPENROUTER_API_KEY</span>=sk-or-...<br>
+      <span class="key">TAVILY_API_KEY</span>=tvly-...
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">!</div>
+      <div class="callout-body">
+        <span class="callout-title">Don't commit this file</span>
+        Add <code>.env</code> to your <code>.gitignore</code> immediately. API keys
+        accidentally pushed to a public repo are scraped within minutes.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 4 =========== -->
+<section class="chapter" id="ch-4">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 04</span><span>Config</span></div>
+      <h2>Configuring the <em>LLM</em></h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>llm config</span>
+      </div>
+      <pre class="code-body">
+llm = <span class="py-class">ChatOpenAI</span>(
+    model=<span class="py-string">"gpt-4o-mini"</span>,
+    api_key=os.getenv(<span class="py-string">"OPENROUTER_API_KEY"</span>),
+    base_url=<span class="py-string">"https://openrouter.ai/api/v1"</span>,
+    temperature=<span class="py-number">0</span>,
+)
+      </pre>
+    </div>
+
+    <p>Each parameter matters:</p>
+
+    <h3><span class="marker">i.</span>model="gpt-4o-mini"</h3>
+    <p>
+      The model identifier. Because we're routing through OpenRouter, you can swap this
+      for any model OpenRouter supports: <code>mistralai/mistral-7b-instruct</code>,
+      <code>anthropic/claude-3.5-sonnet</code>, <code>meta-llama/llama-3.1-70b-instruct</code>,
+      and so on. If you get a "model not found" error, try the prefixed form
+      <code>openai/gpt-4o-mini</code> — OpenRouter sometimes requires the provider prefix.
+    </p>
+
+    <h3><span class="marker">ii.</span>api_key=os.getenv(...)</h3>
+    <p>Auth token, pulled from environment so it never appears in source.</p>
+
+    <h3><span class="marker">iii.</span>base_url</h3>
+    <p>
+      This is the magic line. It redirects <code>ChatOpenAI</code> away from OpenAI's
+      servers and over to OpenRouter's. Because OpenRouter speaks the OpenAI API format,
+      the same client class works unchanged. Remove this line if you want to talk to
+      OpenAI directly.
+    </p>
+
+    <h3><span class="marker">iv.</span>temperature=0</h3>
+    <p>
+      Controls randomness. At <code>0</code>, the model picks the highest-probability
+      token at each step, giving deterministic, repeatable output. Higher values
+      (<code>0.7</code>, <code>1.0</code>) introduce variety, which is good for creative
+      writing but bad for factual or arithmetic tasks. Since our system answers factual
+      questions, <code>0</code> is the right choice.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 5 =========== -->
+<section class="chapter" id="ch-5">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 05</span><span>State</span></div>
+      <h2>The <em>shared</em> state</h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>state schema</span>
+      </div>
+      <pre class="code-body">
+<span class="py-keyword">class</span> <span class="py-class">AgentState</span>(<span class="py-class">TypedDict</span>):
+    user_query: <span class="py-class">str</span>
+    research_data: <span class="py-class">str</span>
+    final_answer: <span class="py-class">str</span>
+    next_agent: <span class="py-class">str</span>
+      </pre>
+    </div>
+
+    <p class="lead">
+      Every node in the graph reads from and writes to this single shared dictionary.
+      Think of it as the team's whiteboard — everyone can see it and update it.
+    </p>
+
+    <p>
+      <code>user_query</code> is the original question, set once at startup and treated
+      as read-only after. <code>research_data</code> holds raw text from the web search,
+      starts empty, and gets filled by the research agent. <code>final_answer</code>
+      holds the polished answer from the computation agent. <code>next_agent</code> is a
+      breadcrumb showing which agent the previous node <em>thinks</em> should run next;
+      it's not strictly required (the supervisor makes its own decisions), but it's
+      invaluable when you <code>print(state)</code> to debug a trace.
+    </p>
+
+    <p>
+      Defining the shape with <code>TypedDict</code> gives autocomplete in your editor,
+      type-checker validation, and a single source of truth for what flows through the
+      system.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 6 =========== -->
+<section class="chapter" id="ch-6">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 06</span><span>Tools</span></div>
+      <h2>Defining the <em>tool</em></h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>web_search tool</span>
+      </div>
+      <pre class="code-body">
+tavily_tool = <span class="py-class">TavilySearchResults</span>(max_results=<span class="py-number">3</span>)
+
+<span class="py-decorator">@tool</span>
+<span class="py-keyword">def</span> <span class="py-fn">web_search</span>(query: <span class="py-class">str</span>):
+    <span class="py-string">"""Search the web using Tavily."""</span>
+    results = tavily_tool.<span class="py-fn">invoke</span>(query)
+    <span class="py-keyword">return</span> <span class="py-class">str</span>(results)
+      </pre>
+    </div>
+
+    <p>
+      <code>TavilySearchResults(max_results=3)</code> is the underlying search client.
+      The <code>max_results=3</code> parameter is a deliberate trade-off: fewer results
+      means less noise, less prompt context consumed, and cheaper LLM calls; more results
+      means better recall but more tokens and more cost. Three is a good default for
+      factual lookups.
+    </p>
+
+    <div class="with-note">
+      <p style="margin-bottom: 0">
+        Wrapping <code>tavily_tool</code> in our own <code>@tool</code>-decorated function
+        is a common pattern even when the wrapped tool is already a LangChain tool. It
+        gives us a single place to control the docstring (which the LLM sees as the
+        tool's description), massage the output format (here, forcing it to a string so
+        it slots into prompts cleanly), and add things like caching, logging, or retries
+        later without touching the rest of the code.
+      </p>
+      <aside class="side-note">
+        <strong>Margin note</strong>
+        Every <code>Runnable</code> in LangChain — LLMs, tools, chains, graphs — exposes
+        <code>.invoke()</code>. It's the universal verb.
+      </aside>
+    </div>
+
+    <p>
+      <code>tavily_tool.invoke(query)</code> returns a list of dicts with
+      <code>title</code>, <code>content</code>, and <code>url</code> for each result. We
+      <code>str()</code> it so it can drop straight into a prompt.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 7 =========== -->
+<section class="chapter" id="ch-7">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 07</span><span>Agents · Manager</span></div>
+      <h2>The <em>supervisor</em> agent</h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>supervisor_agent</span>
+      </div>
+      <pre class="code-body">
+<span class="py-keyword">def</span> <span class="py-fn">supervisor_agent</span>(
+    state: <span class="py-class">AgentState</span>,
+) -&gt; <span class="py-class">Command</span>[<span class="py-class">Literal</span>[<span class="py-string">"research_agent"</span>, <span class="py-string">"computation_agent"</span>, END]]:
+    <span class="py-string">"""Deterministic supervisor logic to prevent infinite loops."""</span>
+
+    <span class="py-keyword">if</span> state.<span class="py-fn">get</span>(<span class="py-string">"final_answer"</span>):
+        <span class="py-keyword">return</span> <span class="py-class">Command</span>(goto=END)
+
+    <span class="py-keyword">if</span> <span class="py-keyword">not</span> state.<span class="py-fn">get</span>(<span class="py-string">"research_data"</span>):
+        <span class="py-keyword">return</span> <span class="py-class">Command</span>(goto=<span class="py-string">"research_agent"</span>)
+
+    <span class="py-keyword">if</span> state.<span class="py-fn">get</span>(<span class="py-string">"research_data"</span>) <span class="py-keyword">and</span> <span class="py-keyword">not</span> state.<span class="py-fn">get</span>(<span class="py-string">"final_answer"</span>):
+        <span class="py-keyword">return</span> <span class="py-class">Command</span>(goto=<span class="py-string">"computation_agent"</span>)
+
+    <span class="py-keyword">return</span> <span class="py-class">Command</span>(goto=END)
+      </pre>
+    </div>
+
+    <p>
+      The return type annotation —
+      <code>Command[Literal["research_agent", "computation_agent", END]]</code>
+      — tells LangGraph "this function returns a <code>Command</code> whose <code>goto</code>
+      will be one of these three values." LangGraph uses that to draw the graph's edges
+      automatically, so you don't have to declare them by hand.
+    </p>
+
+    <p>The logic itself reads top-to-bottom as a priority list:</p>
+
+    <ol style="margin: 0 0 18px 24px; color: var(--ink-soft); max-width: 640px;">
+      <li style="margin-bottom: 10px;"><strong>Rule 1.</strong> If a <code>final_answer</code> is already set, we're done — go to <code>END</code>. <code>state.get("key")</code> returns <code>None</code> (falsy) if the key is missing or its value is an empty string, so this only triggers when there's a real answer.</li>
+      <li style="margin-bottom: 10px;"><strong>Rule 2.</strong> If no research has been done yet (empty <code>research_data</code>), send work to the research agent first. This is what happens on the very first tick.</li>
+      <li style="margin-bottom: 10px;"><strong>Rule 3.</strong> If research is done but no answer has been computed, hand off to the computation agent.</li>
+      <li><strong>Fallback.</strong> The final <code>return Command(goto=END)</code> should be unreachable given the rules above, but having a default exit is good defensive programming — the graph can never accidentally hang.</li>
+    </ol>
+
+    <div class="callout tip">
+      <div class="callout-icon">✓</div>
+      <div class="callout-body">
+        <span class="callout-title">The point</span>
+        The whole function runs in microseconds and costs nothing. No LLM call, no
+        network round-trip, no hallucinated decision. That's the value of deterministic
+        routing.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 8 =========== -->
+<section class="chapter" id="ch-8">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 08</span><span>Agents · Researcher</span></div>
+      <h2>The <em>research</em> agent</h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>research_agent</span>
+      </div>
+      <pre class="code-body">
+<span class="py-keyword">def</span> <span class="py-fn">research_agent</span>(state: <span class="py-class">AgentState</span>) -&gt; <span class="py-class">Command</span>[<span class="py-class">Literal</span>[<span class="py-string">"supervisor_agent"</span>]]:
+    <span class="py-string">"""Uses Tavily to gather external information."""</span>
+    search_result = web_search.<span class="py-fn">invoke</span>(state[<span class="py-string">"user_query"</span>])
+    <span class="py-keyword">return</span> <span class="py-class">Command</span>(
+        goto=<span class="py-string">"supervisor_agent"</span>,
+        update={
+            <span class="py-string">"research_data"</span>: search_result,
+            <span class="py-string">"next_agent"</span>: <span class="py-string">"supervisor_agent"</span>,
+        },
+    )
+      </pre>
+    </div>
+
+    <p>
+      Single responsibility: take the user's question, search the web, stash the results
+      into state, hand control back to the supervisor.
+    </p>
+
+    <p>
+      The return type <code>Command[Literal["supervisor_agent"]]</code> declares "after I
+      run, the next stop is always the supervisor." That's a static edge, not a dynamic
+      decision.
+    </p>
+
+    <div class="with-note">
+      <p style="margin-bottom: 0">
+        <code>state["user_query"]</code> uses dictionary bracket access — fine here
+        because <code>user_query</code> is always present (it's set by the caller). If
+        you wanted defensive code for an optional key, you'd use
+        <code>state.get("user_query")</code>.
+      </p>
+      <aside class="side-note">
+        <strong>Idiom</strong>
+        Use <code>[]</code> when a key must exist (crash on bug). Use <code>.get()</code>
+        when it might not (graceful default).
+      </aside>
+    </div>
+
+    <p>
+      The <code>update</code> dict in the returned <code>Command</code> is
+      <strong>merged</strong> into the shared state by LangGraph. We're saying: "when you
+      go to the supervisor, also write <code>research_data</code> and
+      <code>next_agent</code> into the state first." This is how state mutates across
+      nodes.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 9 =========== -->
+<section class="chapter" id="ch-9">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 09</span><span>Agents · Thinker</span></div>
+      <h2>The <em>computation</em> agent</h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>computation_agent</span>
+      </div>
+      <pre class="code-body">
+<span class="py-keyword">def</span> <span class="py-fn">computation_agent</span>(state: <span class="py-class">AgentState</span>) -&gt; <span class="py-class">Command</span>[<span class="py-class">Literal</span>[<span class="py-string">"supervisor_agent"</span>]]:
+    <span class="py-string">"""Uses reasoning based on research data or user query."""</span>
+
+    prompt = <span class="py-string">f"""</span>
+<span class="py-string">You are a reasoning agent.</span>
+
+<span class="py-string">User Query:</span>
+<span class="py-string">{state['user_query']}</span>
+
+<span class="py-string">Research Data (if any):</span>
+<span class="py-string">{state.get('research_data', '')}</span>
+
+<span class="py-string">Provide a clear final answer.</span>
+<span class="py-string">"""</span>
+    response = llm.<span class="py-fn">invoke</span>(prompt)
+    <span class="py-keyword">return</span> <span class="py-class">Command</span>(
+        goto=<span class="py-string">"supervisor_agent"</span>,
+        update={
+            <span class="py-string">"final_answer"</span>: response.content,
+            <span class="py-string">"next_agent"</span>: <span class="py-string">"supervisor_agent"</span>,
+        },
+    )
+      </pre>
+    </div>
+
+    <p>This is where the actual reasoning happens.</p>
+
+    <p>
+      The prompt is built with an <strong>f-string</strong> (the <code>f"""..."""</code>
+      syntax). Anything inside <code>{curly_braces}</code> is evaluated as Python and
+      inserted into the string. So <code>{state['user_query']}</code> becomes the actual
+      question, and <code>{state.get('research_data', '')}</code> becomes the search
+      results.
+    </p>
+
+    <p>
+      Notice the asymmetry in how we access each field. We use <code>state['user_query']</code>
+      (bracket access) because the query is always present — if it weren't, that's a bug
+      we want to crash on. We use <code>state.get('research_data', '')</code> (with a
+      default) because in edge cases the supervisor might route here without research
+      being done; the empty-string fallback prevents a <code>KeyError</code>.
+    </p>
+
+    <p>
+      <code>llm.invoke(prompt)</code> sends the text to the LLM and returns an
+      <code>AIMessage</code> object. The actual generated text lives in
+      <code>response.content</code> — that's why we extract it before storing.
+    </p>
+
+    <p>
+      After the LLM responds, control flows back to the supervisor, which on its next
+      tick will see <code>final_answer</code> is now set and route to <code>END</code>.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 10 =========== -->
+<section class="chapter" id="ch-10">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 10</span><span>Wiring</span></div>
+      <h2>Building the <em>graph</em></h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>graph assembly</span>
+      </div>
+      <pre class="code-body">
+graph = <span class="py-class">StateGraph</span>(<span class="py-class">AgentState</span>)
+
+graph.<span class="py-fn">add_node</span>(<span class="py-string">"supervisor_agent"</span>, supervisor_agent)
+graph.<span class="py-fn">add_node</span>(<span class="py-string">"research_agent"</span>, research_agent)
+graph.<span class="py-fn">add_node</span>(<span class="py-string">"computation_agent"</span>, computation_agent)
+
+graph.<span class="py-fn">set_entry_point</span>(<span class="py-string">"supervisor_agent"</span>)
+
+graph.<span class="py-fn">add_edge</span>(<span class="py-string">"research_agent"</span>, <span class="py-string">"supervisor_agent"</span>)
+graph.<span class="py-fn">add_edge</span>(<span class="py-string">"computation_agent"</span>, <span class="py-string">"supervisor_agent"</span>)
+
+app = graph.<span class="py-fn">compile</span>()
+      </pre>
+    </div>
+
+    <p>
+      <code>StateGraph(AgentState)</code> creates an empty graph and tells it which
+      <code>TypedDict</code> defines the state's shape. LangGraph uses this schema to
+      validate every update returned from a node.
+    </p>
+
+    <p>
+      <code>graph.add_node("name", function)</code> registers a node. The string name is
+      what other parts of the graph use to refer to it (in <code>goto=...</code>, in
+      edges); the function is what actually executes when the node is visited. The string
+      and the variable name don't have to match, but keeping them identical makes
+      debugging easier.
+    </p>
+
+    <p>
+      <code>graph.set_entry_point("supervisor_agent")</code> is where execution begins
+      when you call <code>app.invoke()</code>. The supervisor inspects the initial state
+      and routes from there.
+    </p>
+
+    <p>
+      <code>graph.add_edge(...)</code> declares <strong>static</strong> edges — these
+      always fire, no decision needed. We don't need to manually wire edges out of the
+      supervisor because the supervisor returns <code>Command(goto=...)</code>, which
+      routes itself. But the worker agents always loop back to the supervisor, so we
+      declare those as fixed edges. The supervisor then re-evaluates state and decides
+      what's next.
+    </p>
+
+    <p>
+      <code>graph.compile()</code> validates everything (no orphan nodes, no edges to
+      nowhere) and returns a <code>Runnable</code> you can call with <code>.invoke()</code>,
+      <code>.stream()</code>, etc.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 11 =========== -->
+<section class="chapter" id="ch-11">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 11</span><span>Execute</span></div>
+      <h2>Running <em>it</em></h2>
+    </header>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">Python</span>
+        <span>__main__</span>
+      </div>
+      <pre class="code-body">
+<span class="py-keyword">if</span> __name__ == <span class="py-string">"__main__"</span>:
+    result = app.<span class="py-fn">invoke</span>({
+        <span class="py-string">"user_query"</span>: <span class="py-string">"What is the latest population of Japan and double it?"</span>,
+        <span class="py-string">"research_data"</span>: <span class="py-string">""</span>,
+        <span class="py-string">"final_answer"</span>: <span class="py-string">""</span>,
+        <span class="py-string">"next_agent"</span>: <span class="py-string">""</span>,
+    })
+    <span class="py-fn">print</span>(result[<span class="py-string">"final_answer"</span>])
+      </pre>
+    </div>
+
+    <p>
+      The <code>if __name__ == "__main__":</code> guard is standard Python — it means
+      "only run this block when the file is executed directly, not when it's imported as
+      a module." Useful when you later want to import these agents into another script.
+    </p>
+
+    <p>
+      The example query is intentionally chosen to need <em>both</em> agents: "latest
+      population of Japan" requires web research, "double it" requires arithmetic
+      reasoning on top of that result. Either capability alone wouldn't suffice.
+    </p>
+
+    <p>
+      We initialise all four state keys, even though only <code>user_query</code> carries
+      real data. This avoids <code>None</code> versus <code>""</code> ambiguity later and
+      matches the <code>TypedDict</code> schema cleanly.
+    </p>
+
+    <p>
+      <code>app.invoke(...)</code> runs the graph to completion and returns the final
+      state — a dict with all four keys populated. We pull out just the
+      <code>final_answer</code> to print.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 12 — TRACE =========== -->
+<section class="chapter" id="ch-12">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 12</span><span>Walkthrough</span></div>
+      <h2>The <em>execution</em> trace</h2>
+    </header>
+
+    <p class="lead">
+      For the example query, here's exactly what happens — three trips through the
+      supervisor, each one a deterministic <code>if</code>/<code>else</code> decision.
+    </p>
+
+    <div class="trace">
+      <div class="trace-head">
+        <span>Sequence — invocation 1</span>
+        <span>7 steps</span>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">1</div>
+        <div class="trace-actor"><span class="pill">invoke()</span></div>
+        <div class="trace-action">
+          State initialised: <code>user_query</code> set to the question; all other fields empty.
+        </div>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">2</div>
+        <div class="trace-actor supervisor"><span class="pill">SUPERVISOR</span></div>
+        <div class="trace-action">
+          Sees <code>research_data</code> is empty → returns <code>Command(goto="research_agent")</code>.
+        </div>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">3</div>
+        <div class="trace-actor research"><span class="pill">RESEARCH</span></div>
+        <div class="trace-action">
+          Calls Tavily, gets search results → <code>Command(goto="supervisor_agent", update={research_data: ...})</code>.
+        </div>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">4</div>
+        <div class="trace-actor supervisor"><span class="pill">SUPERVISOR</span></div>
+        <div class="trace-action">
+          Sees <code>research_data</code> is set, <code>final_answer</code> still empty → routes to <code>computation_agent</code>.
+        </div>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">5</div>
+        <div class="trace-actor computation"><span class="pill">COMPUTATION</span></div>
+        <div class="trace-action">
+          Builds prompt with query + research data, calls LLM → <code>Command(goto="supervisor_agent", update={final_answer: "About 247 million..."})</code>.
+        </div>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">6</div>
+        <div class="trace-actor supervisor"><span class="pill">SUPERVISOR</span></div>
+        <div class="trace-action">
+          Sees <code>final_answer</code> is set → returns <code>Command(goto=END)</code>.
+        </div>
+      </div>
+
+      <div class="trace-step">
+        <div class="trace-num">7</div>
+        <div class="trace-actor end"><span class="pill">END</span></div>
+        <div class="trace-action">
+          <code>invoke()</code> returns the final state. Done.
+        </div>
+      </div>
+    </div>
+
+    <p>
+      Three trips through the supervisor, each one a deterministic <code>if</code>/<code>else</code>
+      decision. No loops, no hallucinated routing, no mystery.
+    </p>
+  </div>
+</section>
+
+<!-- =========== CHAPTER 13 — HORIZONS =========== -->
+<section class="chapter horizons" id="ch-13">
+  <div class="container container--narrow">
+    <header class="chapter-header">
+      <div class="chapter-num"><span>Chapter 13</span><span>Horizons</span></div>
+      <h2>Where to go <em>from here</em></h2>
+    </header>
+
+    <p>Once you have this working, the natural extensions are:</p>
+
+    <div class="horizon-grid">
+      <div class="horizon-card">
+        <div class="horizon-label">— Extend</div>
+        <h4>More agents</h4>
+        <p>Add a <code>code_agent</code> that runs Python via a sandbox, or a <code>summary_agent</code> that compresses long research data before reasoning. Each is just another node and another supervisor rule.</p>
+      </div>
+
+      <div class="horizon-card">
+        <div class="horizon-label">— Observe</div>
+        <h4>Streaming</h4>
+        <p>Replace <code>app.invoke(...)</code> with <code>app.stream(...)</code> to get incremental updates as each node runs — great for showing progress in a UI.</p>
+      </div>
+
+      <div class="horizon-card">
+        <div class="horizon-label">— Persist</div>
+        <h4>State checkpointing</h4>
+        <p>Pass a <code>checkpointer</code> to <code>graph.compile()</code> so state survives across runs. This is how you build agents that remember previous conversations.</p>
+      </div>
+
+      <div class="horizon-card">
+        <div class="horizon-label">— Evolve</div>
+        <h4>Smarter routing</h4>
+        <p>If your rules get complex, you can swap the deterministic supervisor for an LLM-based one — but keep this version around as a fallback. Deterministic routing is almost always the right starting point.</p>
+      </div>
+    </div>
+
+    <p style="margin-top: 36px; font-family: var(--font-display); font-style: italic; font-size: 19px; color: var(--ink); max-width: 580px;">
+      The pattern itself — supervisor + specialised workers + shared state — scales
+      surprisingly far before you need anything fancier.
+    </p>
+  </div>
+</section>
+
+<!-- =========== FOOTER =========== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:16px">
+          <span class="brand-mark"></span>
+          <span>Field Manual</span>
+        </div>
+        <p style="max-width:340px;font-size:14px">
+          A series of practical, in-depth walkthroughs for building real systems with
+          modern AI tooling.
+        </p>
+      </div>
+      <div>
+        <h5>Reference</h5>
+        <ul>
+          <li><a href="https://langchain-ai.github.io/langgraph/" target="_blank" rel="noopener">LangGraph docs</a></li>
+          <li><a href="https://docs.tavily.com/" target="_blank" rel="noopener">Tavily API</a></li>
+          <li><a href="https://openrouter.ai/docs" target="_blank" rel="noopener">OpenRouter</a></li>
+          <li><a href="https://python.langchain.com/" target="_blank" rel="noopener">LangChain</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Source</h5>
+        <ul>
+          <li><a href="https://github.com/shaikmaricar/AgenticAI" target="_blank" rel="noopener">Repository</a></li>
+          <li><a href="https://github.com/shaikmaricar/AgenticAI/blob/main/multi_agent_system_guide.md" target="_blank" rel="noopener">Original guide</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Series</h5>
+        <ul>
+          <li><a href="#">Vol. 01 — Run a local LLM</a></li>
+          <li><a href="#" style="color:var(--amber)">Vol. 02 — Multi-agent systems</a></li>
+          <li><a href="#">Vol. 03 — Coming soon</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© Field Manual · Vol. 02</span>
+      <span>Built deliberately, deterministically</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: "0px 0px -60px 0px" });
+
+  document.querySelectorAll(".chapter, .toc-section").forEach((el) => {
+    el.classList.add("reveal");
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

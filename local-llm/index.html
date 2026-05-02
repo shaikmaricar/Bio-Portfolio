@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- ===== SEO Meta ===== -->
+<meta name="description" content="Step-by-step beginner tutorial for running a local large language model with Python, LlamaIndex, and Ollama. From a fresh install to a working Jupyter notebook talking to a model on your machine." />
+<meta name="keywords" content="local LLM tutorial, Ollama tutorial, LlamaIndex, Python LLM, Jupyter notebook AI, run LLM locally, beginner LLM, llama3.2, no API key LLM, Shaik Maricar" />
+<meta name="author" content="Shaik Maricar" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="googlebot" content="index, follow" />
+<meta name="theme-color" content="#0e0d0c" />
+<link rel="canonical" href="https://shaikmaricar.com/local-llm/" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='30%' cy='30%' r='80%'><stop offset='0%' stop-color='%23e8b04a'/><stop offset='70%' stop-color='%23d97862'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/><text x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-weight='600' font-size='26' fill='%230e0d0c'>SM</text></svg>" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Shaik Maricar" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:url" content="https://shaikmaricar.com/local-llm/" />
+<meta property="og:title" content="Run Your First Local LLM — A Hands-On Walkthrough" />
+<meta property="og:description" content="Step-by-step beginner tutorial for running a local large language model with Python, LlamaIndex, and Ollama. From a fresh install to a working Jupyter notebook talking to a model on your machine." />
+<meta property="og:image" content="https://shaikmaricar.com/og-images/local-llm.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Run Your First Local LLM — A Hands-On Walkthrough" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@ShaikMaricar" />
+<meta name="twitter:creator" content="@ShaikMaricar" />
+<meta name="twitter:title" content="Run Your First Local LLM — A Hands-On Walkthrough" />
+<meta name="twitter:description" content="Step-by-step beginner tutorial for running a local large language model with Python, LlamaIndex, and Ollama. From a fresh install to a working Jupyter notebook talking to a model on your machine." />
+<meta name="twitter:image" content="https://shaikmaricar.com/og-images/local-llm.png" />
+<meta name="twitter:image:alt" content="Run Your First Local LLM — A Hands-On Walkthrough" />
+
+<title>Run Your First Local LLM — A Hands-On Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300..800&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg: #0e0d0c;
+    --bg-elevated: #18161410;
+    --surface: #1a1815;
+    --surface-2: #221f1b;
+    --border: #2c2924;
+    --border-soft: #221f1a;
+    --ink: #ece6d8;
+    --ink-soft: #b8b0a0;
+    --ink-muted: #807868;
+    --amber: #e8b04a;
+    --amber-soft: #f3cb7d;
+    --teal: #6fbfb0;
+    --teal-soft: #98d4c7;
+    --rose: #d97862;
+    --plum: #9a86b8;
+
+    --font-display: "Fraunces", "Times New Roman", serif;
+    --font-body: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    font-weight: 400;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Subtle grain overlay for depth */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  /* Glow gradient behind hero */
+  .glow {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.35;
+  }
+
+  ::selection { background: var(--amber); color: var(--bg); }
+
+  /* ----- Layout ----- */
+  .container {
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  .container--narrow {
+    max-width: 760px;
+  }
+
+  /* ----- Top bar ----- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(14, 13, 12, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-style: italic;
+    font-size: 21px;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--amber), var(--rose) 70%);
+    box-shadow: 0 0 24px rgba(232, 176, 74, 0.4);
+  }
+
+  .topbar-meta {
+    display: flex;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 640px) {
+    .topbar-meta { display: none; }
+  }
+
+  /* ----- Hero ----- */
+  .hero {
+    position: relative;
+    padding: 100px 0 80px;
+    overflow: hidden;
+  }
+
+  .hero .glow-1 {
+    width: 600px; height: 600px;
+    background: var(--amber);
+    top: -200px; left: -150px;
+  }
+
+  .hero .glow-2 {
+    width: 500px; height: 500px;
+    background: var(--teal);
+    top: 100px; right: -200px;
+    opacity: 0.2;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--amber);
+    margin-bottom: 28px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 32px;
+    height: 1px;
+    background: var(--amber);
+  }
+
+  .hero h1 {
+    position: relative;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(48px, 8vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    margin-bottom: 36px;
+    z-index: 1;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--amber);
+  }
+
+  .hero .deck {
+    position: relative;
+    font-size: 20px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 620px;
+    margin-bottom: 44px;
+    z-index: 1;
+  }
+
+  .hero-meta {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px 56px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    z-index: 1;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .meta-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-muted);
+  }
+
+  .meta-value {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ----- Stack chips ----- */
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+
+  .chip-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal);
+  }
+  .chip:nth-child(1) .chip-dot { background: var(--amber); }
+  .chip:nth-child(2) .chip-dot { background: var(--teal); }
+  .chip:nth-child(3) .chip-dot { background: var(--rose); }
+  .chip:nth-child(4) .chip-dot { background: var(--plum); }
+
+  /* ----- Section ----- */
+  section { padding: 72px 0; position: relative; }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(32px, 4.5vw, 48px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin-bottom: 24px;
+  }
+
+  .section-title em { font-style: italic; color: var(--amber); }
+
+  .lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 640px;
+  }
+
+  /* ----- Step layout ----- */
+  .step {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 40px;
+    padding: 80px 0;
+    border-top: 1px solid var(--border);
+    position: relative;
+  }
+
+  @media (max-width: 768px) {
+    .step { grid-template-columns: 1fr; gap: 24px; padding: 56px 0; }
+  }
+
+  .step-number {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 110px;
+    line-height: 0.85;
+    color: var(--amber);
+    letter-spacing: -0.04em;
+    position: sticky;
+    top: 120px;
+    align-self: start;
+  }
+
+  @media (max-width: 768px) {
+    .step-number { font-size: 72px; position: static; }
+  }
+
+  .step-body h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(28px, 3.6vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  .step-body h3 em {
+    font-style: italic;
+    color: var(--ink-soft);
+    font-weight: 300;
+  }
+
+  .step-body p {
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+    max-width: 640px;
+  }
+
+  .step-body p strong { color: var(--ink); font-weight: 600; }
+
+  .step-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--teal);
+    margin-bottom: 14px;
+  }
+
+  /* ----- Mockups: Terminal ----- */
+  .mockup {
+    margin: 28px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #0a0908;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.02);
+  }
+
+  .mockup-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mockup-dots {
+    display: flex;
+    gap: 7px;
+  }
+
+  .mockup-dots span {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #3a342c;
+  }
+  .mockup-dots span:nth-child(1) { background: #ed6a5e; }
+  .mockup-dots span:nth-child(2) { background: #f4be4f; }
+  .mockup-dots span:nth-child(3) { background: #61c454; }
+
+  .mockup-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-left: 8px;
+  }
+
+  .mockup-body {
+    padding: 20px 22px;
+    white-space: pre;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #d8d2c4;
+    overflow-x: auto;
+  }
+
+  .prompt { color: var(--teal); user-select: none; }
+  .prompt-path { color: var(--amber-soft); }
+  .cmd-comment { color: var(--ink-muted); font-style: italic; }
+  .cmd-flag { color: var(--plum); }
+  .cmd-string { color: var(--amber-soft); }
+  .cmd-output { color: var(--ink-muted); }
+  .cmd-success { color: var(--teal); }
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--amber);
+    vertical-align: middle;
+    animation: blink 1.1s infinite;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* ----- Mockups: Code block ----- */
+  .code-block {
+    margin: 28px 0;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #0a0908;
+    overflow: hidden;
+  }
+
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  .code-lang {
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .code-block-body {
+    padding: 22px 24px;
+    white-space: pre;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.75;
+    overflow-x: auto;
+  }
+
+  .py-keyword { color: var(--rose); }
+  .py-builtin { color: var(--plum); }
+  .py-string  { color: var(--amber-soft); }
+  .py-number  { color: var(--teal); }
+  .py-comment { color: var(--ink-muted); font-style: italic; }
+  .py-fn      { color: var(--teal-soft); }
+  .py-class   { color: var(--amber); }
+
+  /* ----- VS Code mockup ----- */
+  .vscode {
+    margin: 28px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #1e1e1e;
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,0.7);
+  }
+
+  .vscode-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #322d28;
+    border-bottom: 1px solid #1a1815;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .vscode-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 280px;
+  }
+
+  @media (max-width: 600px) {
+    .vscode-grid { grid-template-columns: 1fr; }
+    .vscode-sidebar { display: none; }
+  }
+
+  .vscode-sidebar {
+    background: #252522;
+    padding: 14px 12px;
+    border-right: 1px solid #1a1815;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .vscode-sidebar h4 {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .vscode-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+
+  .vscode-file.active {
+    background: #3a342c;
+    color: var(--ink);
+  }
+
+  .vscode-file-icon {
+    width: 14px; height: 14px;
+    border-radius: 2px;
+    background: var(--amber);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--bg);
+  }
+
+  .vscode-main {
+    background: #1e1e1e;
+    position: relative;
+  }
+
+  .vscode-tabs {
+    display: flex;
+    background: #252522;
+    border-bottom: 1px solid #1a1815;
+  }
+
+  .vscode-tab {
+    padding: 9px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    background: #1e1e1e;
+    border-right: 1px solid #1a1815;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .vscode-tab.active {
+    border-top: 1px solid var(--amber);
+  }
+
+  .vscode-content {
+    padding: 18px 22px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #d8d2c4;
+  }
+
+  .vscode-line {
+    display: flex;
+    gap: 16px;
+  }
+  .vscode-linenum {
+    color: #4a443c;
+    user-select: none;
+    width: 20px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Command palette mockup */
+  .command-palette {
+    background: #1e1c19;
+    border: 1px solid #3a342c;
+    border-radius: 6px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    margin: 20px 0;
+    max-width: 560px;
+  }
+
+  .command-input {
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--border);
+    background: #252522;
+  }
+
+  .command-prefix { color: var(--amber); }
+
+  .command-options {
+    padding: 8px 0;
+  }
+
+  .command-option {
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .command-option.active {
+    background: var(--amber);
+    color: var(--bg);
+    font-weight: 600;
+  }
+
+  .command-option .shortcut {
+    color: var(--ink-muted);
+    font-size: 11px;
+  }
+
+  /* Notebook cell mockup */
+  .notebook {
+    margin: 28px 0;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #1a1815;
+    overflow: hidden;
+  }
+
+  .notebook-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #252220;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  .notebook-cell {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .notebook-cell:last-child { border-bottom: none; }
+
+  .cell-marker {
+    padding: 14px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--teal);
+    text-align: right;
+    background: #16140f;
+  }
+
+  .cell-marker.output { color: var(--rose); }
+
+  .cell-content {
+    padding: 14px 18px;
+    white-space: pre;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #d8d2c4;
+    overflow-x: auto;
+  }
+
+  .cell-content.output {
+    background: #14110d;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  /* ----- Callouts ----- */
+  .callout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    padding: 18px 22px;
+    margin: 24px 0;
+    background: var(--surface);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .callout.tip { border-left-color: var(--teal); }
+  .callout.warn { border-left-color: var(--rose); }
+
+  .callout-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(232, 176, 74, 0.15);
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .callout.tip .callout-icon { background: rgba(111, 191, 176, 0.15); color: var(--teal); }
+  .callout.warn .callout-icon { background: rgba(217, 120, 98, 0.15); color: var(--rose); }
+
+  .callout-body {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .callout-body strong { color: var(--ink); }
+
+  /* ----- Choice grid for step 1 ----- */
+  .choice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 640px) {
+    .choice-grid { grid-template-columns: 1fr; }
+  }
+
+  .choice-card {
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .choice-card:hover { border-color: var(--amber); }
+
+  .choice-card .choice-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+
+  .choice-card h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+
+  .choice-card p {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+
+  .choice-card a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--teal);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .choice-card a:hover { border-bottom-color: var(--teal); }
+
+  /* ----- Final code section ----- */
+  .final {
+    background: linear-gradient(135deg, #1a1815 0%, #211d18 100%);
+    border-radius: 16px;
+    padding: 48px;
+    margin-top: 80px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .final::before {
+    content: "";
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, var(--amber) 0%, transparent 70%);
+    opacity: 0.08;
+    pointer-events: none;
+  }
+
+  @media (max-width: 640px) {
+    .final { padding: 28px; }
+  }
+
+  .final h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(28px, 4vw, 38px);
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  /* ----- Footer ----- */
+  footer {
+    border-top: 1px solid var(--border);
+    margin-top: 100px;
+    padding: 60px 0 80px;
+    color: var(--ink-muted);
+    font-size: 14px;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 48px;
+  }
+
+  @media (max-width: 700px) {
+    .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+  }
+
+  footer h5 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+
+  footer ul { list-style: none; }
+  footer li { margin-bottom: 8px; }
+  footer a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--amber); }
+
+  .footer-bottom {
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  /* ----- TOC nav ----- */
+  .toc {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 36px 0 0;
+  }
+
+  @media (max-width: 600px) {
+    .toc { grid-template-columns: 1fr; }
+  }
+
+  .toc-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--ink-soft);
+    transition: all 0.2s ease;
+  }
+
+  .toc-item:hover {
+    border-color: var(--amber);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--amber);
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .toc-title {
+    font-size: 14.5px;
+    line-height: 1.4;
+  }
+
+  /* ----- Reveal animation ----- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ============================================================
+   * MOBILE HARDENING (added by audit)
+   *
+   * Universal protections against horizontal scroll on phones.
+   * Read top-down: each rule has a specific reason.
+   * ============================================================ */
+
+  /* (1) Global safety net. Page never scrolls horizontally. If any
+         child overflows, it gets clipped — far better than the user
+         seeing a broken layout. */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* (2) Containers cap at viewport width. The padding stays, the
+         content area shrinks. */
+  .container, .container--narrow, .container--reading {
+    max-width: 100%;
+  }
+
+  /* (3) THE big one — wide <pre> in grid/flex parents.
+         By default, grid/flex items have min-width: auto, which lets
+         them expand to fit their content (including non-wrapping <pre>).
+         Setting min-width: 0 makes them respect the column track. */
+  .step-body, .step,
+  .chapter, .chapter > *,
+  .section-header,
+  .container > *,
+  .container--narrow > *,
+  .prose > *,
+  article {
+    min-width: 0;
+  }
+
+  /* (4) Code blocks and mockups: cap at 100% of their parent and
+         scroll horizontally inside themselves rather than pushing
+         the parent wider. */
+  .code-block, .mockup, .notebook, .file-box, .trace, .vscode,
+  .agent-table, .stack-table, .stats-panel, .command-palette {
+    max-width: 100%;
+  }
+  .code-body, .mockup-body, .cell-content, .code-block-body {
+    max-width: 100%;
+    /* white-space: pre is preserved; overflow handles long lines */
+  }
+
+  /* (5) Glow orbs: ensure their host section clips them. The hero
+         already has overflow:hidden but tutorial sections don't. */
+  section { overflow: hidden; }
+  /* But sections that intentionally allow sticky children must still
+     position correctly — sticky topbar is in a <header>, not a section,
+     so it's safe. */
+
+  /* (6) Hero typography scales down more aggressively. The big italic
+         display H1 was clipping awkwardly on 360-375px phones. */
+  @media (max-width: 480px) {
+    .hero h1, h1.h-display {
+      font-size: clamp(40px, 11vw, 64px);
+      line-height: 1.0;
+    }
+    .hero .deck, .hero-deck {
+      font-size: 17px;
+    }
+    .lead {
+      font-size: 19px;
+    }
+    h2, .h-section, .chapter h2, section h2 {
+      font-size: clamp(28px, 7vw, 38px);
+    }
+  }
+
+  /* (7) Tighter container padding on small phones to give content
+         more breathing room. */
+  @media (max-width: 480px) {
+    .container, .container--narrow, .container--reading {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    section {
+      padding: 56px 0;
+    }
+    .hero {
+      padding: 60px 0 40px;
+    }
+  }
+
+  /* (8) Code and terminal bodies use a smaller font on phones so more
+         characters fit before horizontal scroll kicks in. */
+  @media (max-width: 480px) {
+    .code-body, .mockup-body, .cell-content, .code-block-body {
+      font-size: 12.5px;
+      padding: 16px 18px;
+    }
+    .code-header, .mockup-header {
+      padding: 10px 14px;
+      font-size: 11px;
+    }
+  }
+
+  /* (9) Tap-target safety. Anything tappable should be at least 44px
+         tall — Apple's HIG and Google's Material both agree on this. */
+  @media (max-width: 720px) {
+    .btn { padding: 14px 22px; min-height: 44px; }
+    .topnav a, .footer-links a {
+      padding: 8px 0;
+      display: inline-block;
+    }
+    .toc-item, .toc-item-row {
+      padding: 14px 0;
+    }
+    .chip, .tool {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .contact-chip {
+      min-height: 40px;
+    }
+  }
+
+  /* (10) Stats panel grid (profile page) — was 2 cols, becomes 2 cols
+          still but with tighter padding. */
+  @media (max-width: 480px) {
+    .stats-grid .stat {
+      padding: 18px 14px;
+    }
+    .stat-num {
+      font-size: 36px;
+    }
+    .stat-label {
+      font-size: 9.5px;
+    }
+  }
+
+  /* (11) Tutorial step layout — keep numbers visible but smaller,
+          and stack on phones (this was already done but the gap was
+          too big). */
+  @media (max-width: 480px) {
+    .step {
+      gap: 16px !important;
+      padding: 48px 0 !important;
+    }
+    .step-number {
+      font-size: 56px !important;
+    }
+  }
+
+  /* (12) Trace diagram — already responsive, but ensure code chips
+          inside trace-action don't overflow. */
+  .trace-action code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (13) Inline code in callouts — was overflowing the callout body. */
+  .callout-body code, .callout code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (14) Long URLs in contact chips wrap rather than overflow. */
+  .contact-chip {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (15) Library / volume cards — long titles can wrap freely now. */
+  .volume-title, .h-display, .h-section {
+    overflow-wrap: break-word;
+  }
+
+  /* (16) Footer bottom row stacks on phones so it doesn't get cramped. */
+  @media (max-width: 480px) {
+    .footer-bottom, .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Run Your First Local LLM — A Hands-On Walkthrough",
+  "description": "Step-by-step beginner tutorial for running a local large language model with Python, LlamaIndex, and Ollama. From a fresh install to a working Jupyter notebook talking to a model on your machine.",
+  "image": "https://shaikmaricar.com/og-images/local-llm.png",
+  "url": "https://shaikmaricar.com/local-llm/",
+  "mainEntityOfPage": {"@type": "WebPage", "@id": "https://shaikmaricar.com/local-llm/"},
+  "datePublished": "2026-05-02",
+  "dateModified": "2026-05-02",
+  "inLanguage": "en-US",
+  "author": {
+    "@type": "Person",
+    "name": "Shaik Maricar",
+    "url": "https://shaikmaricar.com"
+  },
+  "publisher": {
+    "@type": "Person",
+    "name": "Shaik Maricar",
+    "url": "https://shaikmaricar.com"
+  },
+  "isAccessibleForFree": true,
+  "keywords": "local LLM tutorial, Ollama tutorial, LlamaIndex, Python LLM, Jupyter notebook AI, run LLM locally, beginner LLM, llama3.2, no API key LLM, Shaik Maricar"
+}
+</script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span>The&nbsp;Local&nbsp;Stack</span>
+    </div>
+    <div class="topbar-meta">
+      <span>VOL.&nbsp;01</span>
+      <span>TUTORIAL</span>
+      <span>EST.&nbsp;READ&nbsp;15&nbsp;MIN</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="container">
+    <div class="eyebrow">A hands-on walkthrough</div>
+    <h1>
+      Run your first<br>
+      <em>local</em> language model<br>
+      in eight steps.
+    </h1>
+    <p class="deck">
+      A complete, no-shortcuts setup &mdash; from a fresh Python install to a working
+      Jupyter notebook talking to a model running entirely on your machine.
+      Zero API keys. Zero cloud bills.
+    </p>
+
+    <div class="stack">
+      <span class="chip"><span class="chip-dot"></span>Python 3.10+</span>
+      <span class="chip"><span class="chip-dot"></span>LlamaIndex</span>
+      <span class="chip"><span class="chip-dot"></span>Ollama</span>
+      <span class="chip"><span class="chip-dot"></span>VS&nbsp;Code</span>
+    </div>
+
+    <div class="hero-meta">
+      <div class="meta-item">
+        <span class="meta-label">Difficulty</span>
+        <span class="meta-value">Beginner</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Duration</span>
+        <span class="meta-value">~20 minutes</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Prerequisites</span>
+        <span class="meta-value">A working terminal</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-label">Platform</span>
+        <span class="meta-value">Windows&nbsp;/&nbsp;macOS&nbsp;/&nbsp;Linux</span>
+      </div>
+    </div>
+
+    <nav class="toc">
+      <a href="#step-1" class="toc-item"><span class="toc-num">01</span><span class="toc-title">Install Python</span></a>
+      <a href="#step-2" class="toc-item"><span class="toc-num">02</span><span class="toc-title">Create a virtual environment</span></a>
+      <a href="#step-3" class="toc-item"><span class="toc-num">03</span><span class="toc-title">Install LlamaIndex packages</span></a>
+      <a href="#step-4" class="toc-item"><span class="toc-num">04</span><span class="toc-title">Set up a VS&nbsp;Code workspace</span></a>
+      <a href="#step-5" class="toc-item"><span class="toc-num">05</span><span class="toc-title">Select the Python interpreter</span></a>
+      <a href="#step-6" class="toc-item"><span class="toc-num">06</span><span class="toc-title">Create a Jupyter notebook</span></a>
+      <a href="#step-7" class="toc-item"><span class="toc-num">07</span><span class="toc-title">Save the notebook</span></a>
+      <a href="#step-8" class="toc-item"><span class="toc-num">08</span><span class="toc-title">Write &amp; run your first prompt</span></a>
+    </nav>
+  </div>
+</section>
+
+<!-- ===================== STEPS ===================== -->
+<div class="container container--narrow">
+
+  <!-- STEP 1 -->
+  <article class="step" id="step-1">
+    <div class="step-number">01</div>
+    <div class="step-body">
+      <span class="step-tag">— Foundations</span>
+      <h3>Install Python <em>(pick a path)</em></h3>
+      <p>
+        You have two clean options. Both work, both are well-supported. <strong>Miniconda</strong>
+        is the gentler path if you plan to juggle many environments, while a <strong>direct
+        Python install</strong> is the most minimal route &mdash; just the language, nothing else.
+      </p>
+
+      <div class="choice-grid">
+        <div class="choice-card">
+          <div class="choice-label">Option A &middot; Recommended</div>
+          <h4>Miniconda</h4>
+          <p>A small installer that ships <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--amber)">conda</code>, Python, and not much else. Great for managing many projects.</p>
+          <a href="https://docs.conda.io/en/latest/miniconda.html" target="_blank" rel="noopener">docs.conda.io/miniconda &rarr;</a>
+        </div>
+        <div class="choice-card">
+          <div class="choice-label">Option B &middot; Minimal</div>
+          <h4>Python.org installer</h4>
+          <p>The official Python distribution. Smallest footprint, native <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--amber)">venv</code> support, no extras.</p>
+          <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">python.org/downloads &rarr;</a>
+        </div>
+      </div>
+
+      <p>After installing, confirm that Python is on your <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">PATH</code>:</p>
+
+      <div class="mockup">
+        <div class="mockup-header">
+          <div class="mockup-dots"><span></span><span></span><span></span></div>
+          <span class="mockup-title">Terminal &mdash; verify install</span>
+        </div>
+        <pre class="mockup-body">
+<span class="prompt-path">~/projects</span> <span class="prompt">$</span> python --version
+<span class="cmd-output">Python 3.12.4</span>
+
+<span class="prompt-path">~/projects</span> <span class="prompt">$</span> pip --version
+<span class="cmd-output">pip 24.1.2 from C:\Users\you\AppData\Local\Programs\Python\...</span><span class="cursor"></span>
+        </pre>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-icon">!</div>
+        <div class="callout-body">
+          <strong>Windows users:</strong> on the Python installer, tick <em>"Add python.exe to PATH"</em>
+          before clicking <em>Install Now</em>. It saves you a config headache later.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 2 -->
+  <article class="step" id="step-2">
+    <div class="step-number">02</div>
+    <div class="step-body">
+      <span class="step-tag">— Isolation</span>
+      <h3>Create a virtual environment</h3>
+      <p>
+        A virtual environment is a sandboxed Python copy that keeps this project's
+        dependencies from leaking into others. Pick a folder, name your environment
+        anything you like (here we use <strong>llama-env</strong>), and run:
+      </p>
+
+      <div class="mockup">
+        <div class="mockup-header">
+          <div class="mockup-dots"><span></span><span></span><span></span></div>
+          <span class="mockup-title">Terminal &mdash; create venv</span>
+        </div>
+        <pre class="mockup-body">
+<span class="cmd-comment"># 1. create the environment</span>
+<span class="prompt-path">~/projects</span> <span class="prompt">$</span> python -m venv llama-env
+
+<span class="cmd-comment"># 2. activate it (Windows / cmd.exe)</span>
+<span class="prompt-path">~/projects</span> <span class="prompt">$</span> llama-env\Scripts\activate.bat
+
+<span class="cmd-comment"># 3. activate it (PowerShell)</span>
+<span class="prompt-path">~/projects</span> <span class="prompt">$</span> llama-env\Scripts\Activate.ps1
+
+<span class="cmd-comment"># 4. activate it (macOS / Linux)</span>
+<span class="prompt-path">~/projects</span> <span class="prompt">$</span> source llama-env/bin/activate
+
+<span class="cmd-success">(llama-env)</span> <span class="prompt-path">~/projects</span> <span class="prompt">$</span><span class="cursor"></span>
+        </pre>
+      </div>
+
+      <p>
+        When the prompt prefix changes to <code style="font-family:var(--font-mono);font-size:13px;color:var(--teal)">(llama-env)</code>,
+        the environment is active and any <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">pip install</code>
+        you run from now on lands inside it &mdash; not your global Python.
+      </p>
+
+      <div class="callout tip">
+        <div class="callout-icon">i</div>
+        <div class="callout-body">
+          <strong>Naming tip:</strong> short, lowercase, no spaces. Common conventions are
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">.venv</code>,
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">env</code>, or a project-specific name.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 3 -->
+  <article class="step" id="step-3">
+    <div class="step-number">03</div>
+    <div class="step-body">
+      <span class="step-tag">— Dependencies</span>
+      <h3>Install <em>LlamaIndex</em> &amp; the Ollama bridge</h3>
+      <p>
+        With the environment active, install two packages: the core <strong>LlamaIndex</strong>
+        framework and its <strong>Ollama integration</strong> that lets it talk to local models.
+      </p>
+
+      <div class="mockup">
+        <div class="mockup-header">
+          <div class="mockup-dots"><span></span><span></span><span></span></div>
+          <span class="mockup-title">Terminal &mdash; pip install</span>
+        </div>
+        <pre class="mockup-body">
+<span class="cmd-success">(llama-env)</span> <span class="prompt-path">~/projects</span> <span class="prompt">$</span> pip install llama-index llama-index-llms-ollama
+
+<span class="cmd-output">Collecting llama-index</span>
+<span class="cmd-output">  Downloading llama_index-0.11.x-py3-none-any.whl</span>
+<span class="cmd-output">Collecting llama-index-llms-ollama</span>
+<span class="cmd-output">  Downloading llama_index_llms_ollama-0.x.x-py3-none-any.whl</span>
+<span class="cmd-output">Installing collected packages: ...</span>
+<span class="cmd-success">Successfully installed llama-index-0.11.x  llama-index-llms-ollama-0.x.x</span><span class="cursor"></span>
+        </pre>
+      </div>
+
+      <div class="callout">
+        <div class="callout-icon">!</div>
+        <div class="callout-body">
+          <strong>Heads up:</strong> you also need the Ollama runtime itself installed and a
+          model pulled locally. From a separate terminal: <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">ollama pull llama3.2</code>.
+          Grab the installer at <a href="https://ollama.com/download" style="color:var(--teal);text-decoration:none;border-bottom:1px solid var(--teal)">ollama.com/download</a>.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 4 -->
+  <article class="step" id="step-4">
+    <div class="step-number">04</div>
+    <div class="step-body">
+      <span class="step-tag">— Workspace</span>
+      <h3>Open VS Code &amp; create a workspace</h3>
+      <p>
+        Launch <strong>Visual Studio Code</strong>. Use <em>File &rarr; Open Folder</em> to point
+        it at a fresh practice folder (for example, <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">~/projects/llama-practice</code>),
+        then save it as a workspace via <em>File &rarr; Save Workspace As&hellip;</em>
+      </p>
+
+      <div class="vscode">
+        <div class="vscode-titlebar">
+          <div class="mockup-dots"><span></span><span></span><span></span></div>
+          <span style="margin-left: 8px;">llama-practice — Visual Studio Code</span>
+        </div>
+        <div class="vscode-grid">
+          <aside class="vscode-sidebar">
+            <h4>Explorer</h4>
+            <div class="vscode-file"><span class="vscode-file-icon" style="background:var(--plum)">W</span><span style="color:var(--ink)">LLAMA-PRACTICE</span></div>
+            <div style="padding-left: 14px; margin-top: 6px;">
+              <div class="vscode-file"><span class="vscode-file-icon" style="background:var(--teal)">P</span>llama-env</div>
+              <div class="vscode-file"><span class="vscode-file-icon">.</span>.gitignore</div>
+              <div class="vscode-file"><span class="vscode-file-icon" style="background:var(--rose)">M</span>README.md</div>
+            </div>
+          </aside>
+          <div class="vscode-main">
+            <div class="vscode-tabs">
+              <div class="vscode-tab active"><span class="vscode-file-icon" style="background:var(--rose)">M</span>README.md</div>
+            </div>
+            <div class="vscode-content">
+              <div class="vscode-line"><span class="vscode-linenum">1</span><span style="color:var(--rose)"># Llama Practice</span></div>
+              <div class="vscode-line"><span class="vscode-linenum">2</span></div>
+              <div class="vscode-line"><span class="vscode-linenum">3</span><span>Local LLM experiments using LlamaIndex + Ollama.</span></div>
+              <div class="vscode-line"><span class="vscode-linenum">4</span></div>
+              <div class="vscode-line"><span class="vscode-linenum">5</span><span style="color:var(--ink-muted)">&lt;-- next: select interpreter --&gt;</span><span class="cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-icon">i</div>
+        <div class="callout-body">
+          Keep your <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">llama-env</code> folder
+          <em>inside</em> the workspace. VS Code can then auto-detect it as a candidate interpreter in the next step.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 5 -->
+  <article class="step" id="step-5">
+    <div class="step-number">05</div>
+    <div class="step-body">
+      <span class="step-tag">— Configuration</span>
+      <h3>Select the Python interpreter</h3>
+      <p>
+        With your workspace open, hit <strong>Ctrl + Shift + P</strong> (or <strong>&#8984; + Shift + P</strong> on
+        macOS) to open the <em>Command Palette</em>. Start typing <em>Python: Select Interpreter</em>
+        and pick the one inside your <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">llama-env</code> folder.
+      </p>
+
+      <div class="command-palette">
+        <div class="command-input">
+          <span class="command-prefix">&gt;</span> Python: Select Interpreter<span class="cursor"></span>
+        </div>
+        <div class="command-options">
+          <div class="command-option active">
+            <span>Python: Select Interpreter</span>
+            <span class="shortcut">enter</span>
+          </div>
+          <div class="command-option">
+            <span>Python: Create Environment</span>
+            <span class="shortcut"></span>
+          </div>
+          <div class="command-option">
+            <span>Python: Configure Tests</span>
+            <span class="shortcut"></span>
+          </div>
+        </div>
+      </div>
+
+      <p>You'll see a second picker listing all detected interpreters. Choose:</p>
+
+      <div class="command-palette">
+        <div class="command-input">
+          Select an interpreter<span class="cursor"></span>
+        </div>
+        <div class="command-options">
+          <div class="command-option active">
+            <span>+ Enter interpreter path&hellip;</span>
+            <span class="shortcut"></span>
+          </div>
+          <div class="command-option" style="background:rgba(111,191,176,0.12);color:var(--teal)">
+            <span>Python 3.12.4 ('llama-env': venv) &nbsp;./llama-env/Scripts/python.exe</span>
+            <span class="shortcut">recommended</span>
+          </div>
+          <div class="command-option">
+            <span>Python 3.12.4 &nbsp;C:\Python312\python.exe</span>
+            <span class="shortcut">global</span>
+          </div>
+        </div>
+      </div>
+
+      <p>
+        When you pick the right one, the Python version indicator in the bottom-right
+        of VS Code's status bar will update to show <code style="font-family:var(--font-mono);font-size:13px;color:var(--teal)">'llama-env'</code>.
+        That's your signal that VS Code is now running inside your venv.
+      </p>
+    </div>
+  </article>
+
+  <!-- STEP 6 -->
+  <article class="step" id="step-6">
+    <div class="step-number">06</div>
+    <div class="step-body">
+      <span class="step-tag">— Notebook</span>
+      <h3>Create a new Jupyter notebook</h3>
+      <p>
+        Open the Command Palette again (<strong>Ctrl + Shift + P</strong>), and this time type
+        <em>Create: New Jupyter Notebook</em>. VS Code will spin up an empty
+        notebook in a new tab.
+      </p>
+
+      <div class="command-palette">
+        <div class="command-input">
+          <span class="command-prefix">&gt;</span> Create: New Jupyter Notebook<span class="cursor"></span>
+        </div>
+        <div class="command-options">
+          <div class="command-option active">
+            <span>Create: New Jupyter Notebook</span>
+            <span class="shortcut">enter</span>
+          </div>
+          <div class="command-option">
+            <span>Jupyter: Create Interactive Window</span>
+            <span class="shortcut"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-icon">!</div>
+        <div class="callout-body">
+          <strong>First time on this machine?</strong> VS Code may prompt you to install the
+          <em>Jupyter</em> and <em>Python</em> extensions. Accept both &mdash; they're official Microsoft extensions.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 7 -->
+  <article class="step" id="step-7">
+    <div class="step-number">07</div>
+    <div class="step-body">
+      <span class="step-tag">— Persistence</span>
+      <h3>Save it as <em>first-test.ipynb</em></h3>
+      <p>
+        Press <strong>Ctrl + S</strong> and save the file inside your workspace folder.
+        Use the filename <strong>first-test.ipynb</strong> &mdash; the <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">.ipynb</code>
+        extension is what makes VS Code (and the broader Jupyter ecosystem) recognise it
+        as a notebook.
+      </p>
+
+      <div class="vscode">
+        <div class="vscode-titlebar">
+          <div class="mockup-dots"><span></span><span></span><span></span></div>
+          <span style="margin-left: 8px;">first-test.ipynb — llama-practice — Visual Studio Code</span>
+        </div>
+        <div class="vscode-grid">
+          <aside class="vscode-sidebar">
+            <h4>Explorer</h4>
+            <div class="vscode-file"><span class="vscode-file-icon" style="background:var(--plum)">W</span><span style="color:var(--ink)">LLAMA-PRACTICE</span></div>
+            <div style="padding-left: 14px; margin-top: 6px;">
+              <div class="vscode-file active"><span class="vscode-file-icon">J</span>first-test.ipynb</div>
+              <div class="vscode-file"><span class="vscode-file-icon" style="background:var(--teal)">P</span>llama-env</div>
+              <div class="vscode-file"><span class="vscode-file-icon" style="background:var(--rose)">M</span>README.md</div>
+            </div>
+          </aside>
+          <div class="vscode-main">
+            <div class="vscode-tabs">
+              <div class="vscode-tab active"><span class="vscode-file-icon">J</span>first-test.ipynb</div>
+            </div>
+            <div class="vscode-content" style="display:flex;align-items:center;justify-content:center;min-height:140px;color:var(--ink-muted);font-style:italic;">
+              <span style="font-family:var(--font-display);font-size:15px">An empty notebook, ready for its first cell&hellip;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        <div class="callout-icon">!</div>
+        <div class="callout-body">
+          <strong>Watch the spelling:</strong> the extension is <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--ink)">.ipynb</code>
+          (i&middot;py&middot;n&middot;b), not <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--rose);text-decoration:line-through">.ipnyb</code>. A typo here means the file
+          opens as plain JSON.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- STEP 8 -->
+  <article class="step" id="step-8">
+    <div class="step-number">08</div>
+    <div class="step-body">
+      <span class="step-tag">— Hello, model</span>
+      <h3>Write &amp; run your first prompt</h3>
+      <p>
+        Click into the first cell of the notebook and paste in the four lines below.
+        Then hit <strong>Shift + Enter</strong> to execute it. The first run may take a few seconds
+        as Ollama warms up the model.
+      </p>
+
+      <div class="notebook">
+        <div class="notebook-header">
+          <span>first-test.ipynb &mdash; cell 1 of 1</span>
+          <span style="color:var(--teal)">&#9679; llama-env (Python 3.12.4)</span>
+        </div>
+
+        <div class="notebook-cell">
+          <div class="cell-marker">In&nbsp;[1]:</div>
+          <pre class="cell-content">
+<span class="py-keyword">from</span> <span class="py-builtin">llama_index.llms.ollama</span> <span class="py-keyword">import</span> <span class="py-class">Ollama</span>
+
+llm <span class="py-keyword">=</span> <span class="py-class">Ollama</span>(
+    model<span class="py-keyword">=</span><span class="py-string">"llama3.2:latest"</span>,
+    temperature<span class="py-keyword">=</span><span class="py-number">0.2</span>,
+    request_timeout<span class="py-keyword">=</span><span class="py-number">30</span>,
+    max_retries<span class="py-keyword">=</span><span class="py-number">3</span>,
+    max_tokens<span class="py-keyword">=</span><span class="py-number">2048</span>,
+)
+
+response <span class="py-keyword">=</span> llm.<span class="py-fn">complete</span>(<span class="py-string">"What is the capital of France?"</span>)
+<span class="py-fn">print</span>(response)
+          </pre>
+        </div>
+
+        <div class="notebook-cell">
+          <div class="cell-marker output">Out[1]:</div>
+          <pre class="cell-content output">
+The capital of France is Paris. It is one of the most visited cities in
+the world, known for landmarks such as the Eiffel Tower, the Louvre
+Museum, and Notre-Dame Cathedral.
+          </pre>
+        </div>
+      </div>
+
+      <p>
+        That output is being generated entirely on your machine &mdash; no network call to a
+        hosted model, no token usage charged anywhere. You've just wired up your first
+        local LLM pipeline.
+      </p>
+
+      <div class="callout tip">
+        <div class="callout-icon">i</div>
+        <div class="callout-body">
+          <strong>What each parameter does:</strong>
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">temperature</code> controls randomness (lower = more deterministic),
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">request_timeout</code> caps how long to wait,
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">max_retries</code> handles transient failures, and
+          <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--teal)">max_tokens</code> bounds the response length.
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- ===================== FINAL ===================== -->
+  <section class="final">
+    <span class="section-label">— You shipped it</span>
+    <h2>The complete recipe, distilled.</h2>
+    <p style="color: var(--ink-soft); margin-bottom: 24px; max-width: 560px;">
+      Eight steps, one working local LLM. From here, the obvious next moves: swap models
+      (try <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">mistral</code> or
+      <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">qwen2.5</code>), add a
+      <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">VectorStoreIndex</code> over your own
+      documents, or stream tokens with <code style="font-family:var(--font-mono);font-size:13px;color:var(--amber)">llm.stream_complete()</code>.
+    </p>
+
+    <div class="code-block">
+      <div class="code-block-header">
+        <span class="code-lang">Python</span>
+        <span>first-test.ipynb &middot; cell 1</span>
+      </div>
+      <pre class="code-block-body">
+<span class="py-keyword">from</span> <span class="py-builtin">llama_index.llms.ollama</span> <span class="py-keyword">import</span> <span class="py-class">Ollama</span>
+
+llm <span class="py-keyword">=</span> <span class="py-class">Ollama</span>(
+    model<span class="py-keyword">=</span><span class="py-string">"llama3.2:latest"</span>,
+    temperature<span class="py-keyword">=</span><span class="py-number">0.2</span>,
+    request_timeout<span class="py-keyword">=</span><span class="py-number">30</span>,
+    max_retries<span class="py-keyword">=</span><span class="py-number">3</span>,
+    max_tokens<span class="py-keyword">=</span><span class="py-number">2048</span>,
+)
+
+response <span class="py-keyword">=</span> llm.<span class="py-fn">complete</span>(<span class="py-string">"What is the capital of France?"</span>)
+<span class="py-fn">print</span>(response)
+      </pre>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:16px">
+          <span class="brand-mark"></span>
+          <span>The&nbsp;Local&nbsp;Stack</span>
+        </div>
+        <p style="max-width:380px">
+          Practical, hands-on tutorials for building with open models and developer-friendly tooling.
+          Locally, mostly.
+        </p>
+      </div>
+      <div>
+        <h5>Reference</h5>
+        <ul>
+          <li><a href="https://docs.llamaindex.ai/" target="_blank" rel="noopener">LlamaIndex docs</a></li>
+          <li><a href="https://ollama.com/library" target="_blank" rel="noopener">Ollama model library</a></li>
+          <li><a href="https://code.visualstudio.com/docs/python/jupyter-support" target="_blank" rel="noopener">Jupyter in VS&nbsp;Code</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Up next</h5>
+        <ul>
+          <li><a href="#">Building a RAG pipeline</a></li>
+          <li><a href="#">Streaming responses</a></li>
+          <li><a href="#">Chat memory &amp; agents</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; THE LOCAL STACK &middot; Vol. 01</span>
+      <span>WRITTEN, EDITED &amp; SHIPPED LOCALLY</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Tiny reveal-on-scroll animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
+
+  document.querySelectorAll(".step, .final").forEach((el) => {
+    el.classList.add("reveal");
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

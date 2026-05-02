@@ -1,0 +1,6 @@
+# robots.txt for https://shaikmaricar.com
+User-agent: *
+Allow: /
+
+# Search engines: here is the map
+Sitemap: https://shaikmaricar.com/sitemap.xml

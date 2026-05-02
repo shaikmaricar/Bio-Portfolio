@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- ===== SEO Meta ===== -->
+<meta name="description" content="Principal Data & AI Architect with 25+ years building enterprise data platforms and production-grade Agentic AI systems. Snowflake, LangGraph, TOGAF, and a library of beginner field guides." />
+<meta name="keywords" content="Shaik Maricar, Principal Data Architect, AI Architect, Agentic AI, LangGraph, RAG, MCP, Snowflake, Data Mesh, Lakehouse, TOGAF, Cloud Data Platform, Enterprise Architecture, New York" />
+<meta name="author" content="Shaik Maricar" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+<meta name="googlebot" content="index, follow" />
+<meta name="theme-color" content="#0e0d0c" />
+<link rel="canonical" href="https://shaikmaricar.com/" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='30%' cy='30%' r='80%'><stop offset='0%' stop-color='%23e8b04a'/><stop offset='70%' stop-color='%23d97862'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/><text x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-weight='600' font-size='26' fill='%230e0d0c'>SM</text></svg>" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="profile" />
+<meta property="og:site_name" content="Shaik Maricar" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:url" content="https://shaikmaricar.com/" />
+<meta property="og:title" content="Shaik Maricar — Principal Data & AI Architect" />
+<meta property="og:description" content="Principal Data & AI Architect with 25+ years building enterprise data platforms and production-grade Agentic AI systems. Snowflake, LangGraph, TOGAF, and a library of beginner field guides." />
+<meta property="og:image" content="https://shaikmaricar.com/og-images/profile.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Shaik Maricar — Principal Data & AI Architect" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@ShaikMaricar" />
+<meta name="twitter:creator" content="@ShaikMaricar" />
+<meta name="twitter:title" content="Shaik Maricar — Principal Data & AI Architect" />
+<meta name="twitter:description" content="Principal Data & AI Architect with 25+ years building enterprise data platforms and production-grade Agentic AI systems. Snowflake, LangGraph, TOGAF, and a library of beginner field guides." />
+<meta name="twitter:image" content="https://shaikmaricar.com/og-images/profile.png" />
+<meta name="twitter:image:alt" content="Shaik Maricar — Principal Data & AI Architect" />
+
+<title>Shaik Maricar — Principal Data & AI Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300..800&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0e0d0c;
+    --surface: #1a1815;
+    --surface-2: #221f1b;
+    --surface-3: #2a2620;
+    --border: #2c2924;
+    --border-soft: #221f1a;
+    --ink: #ece6d8;
+    --ink-soft: #b8b0a0;
+    --ink-muted: #807868;
+    --amber: #e8b04a;
+    --amber-soft: #f3cb7d;
+    --teal: #6fbfb0;
+    --teal-soft: #98d4c7;
+    --rose: #d97862;
+    --rose-soft: #e89580;
+    --plum: #9a86b8;
+
+    --font-display: "Fraunces", "Times New Roman", serif;
+    --font-body: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 100;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  ::selection { background: var(--amber); color: var(--bg); }
+
+  .glow {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.32;
+  }
+
+  .container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 32px; position: relative; }
+  .container--narrow { max-width: 760px; }
+
+  /* ----- Topbar ----- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(14, 13, 12, 0.7);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .topbar-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 32px; max-width: 1280px; margin: 0 auto;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: -0.005em;
+  }
+  .brand-mark {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--amber), var(--rose) 70%);
+    box-shadow: 0 0 24px rgba(232, 176, 74, 0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--bg);
+    letter-spacing: -0.02em;
+  }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+  .brand-name { font-weight: 500; letter-spacing: 0.01em; }
+  .brand-role {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .topnav { display: flex; gap: 28px; }
+  .topnav a {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    transition: color 0.2s;
+  }
+  .topnav a:hover { color: var(--amber); }
+  @media (max-width: 720px) { .topnav { display: none; } .brand-role { display: none; } }
+
+  /* ----- Hero ----- */
+  .hero {
+    position: relative;
+    padding: 100px 0 80px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero .glow-1 { width: 700px; height: 700px; background: var(--amber); top: -250px; left: -200px; }
+  .hero .glow-2 { width: 500px; height: 500px; background: var(--teal); top: 100px; right: -200px; opacity: 0.18; }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  @media (max-width: 940px) { .hero-grid { grid-template-columns: 1fr; gap: 48px; } }
+
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--amber);
+    margin-bottom: 28px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 32px; height: 1px;
+    background: var(--amber);
+  }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(54px, 9vw, 108px);
+    line-height: 0.92;
+    letter-spacing: -0.04em;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+  .hero h1 .first { font-style: italic; font-weight: 300; color: var(--amber); }
+  .hero h1 .last  { font-weight: 400; }
+
+  .hero-role {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 3vw, 30px);
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+  .hero-role em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+  .hero-tagline {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-soft);
+    margin-bottom: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .hero-tagline span {
+    display: inline-block;
+    margin: 0 6px;
+    color: var(--amber);
+  }
+
+  .hero-deck {
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-bottom: 36px;
+    max-width: 540px;
+  }
+
+  .hero-contact {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+  .contact-chip {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .contact-chip:hover { border-color: var(--amber); color: var(--ink); }
+  .contact-chip-icon {
+    width: 14px; height: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--amber);
+  }
+
+  /* ----- Hero stats panel ----- */
+  .stats-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.6);
+    position: relative;
+  }
+  .stats-panel::before {
+    content: "VITAL · STATISTICS";
+    position: absolute;
+    top: -10px; left: 24px;
+    background: var(--bg);
+    padding: 0 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 26px 22px;
+    transition: background 0.2s;
+  }
+  .stat:hover { background: var(--surface-2); }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 50px;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--amber);
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .stat-num em { font-style: italic; }
+  .stat-num .plus { color: var(--rose); font-style: italic; }
+  .stat-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+
+  /* ----- Section ----- */
+  section {
+    padding: 100px 0;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header {
+    margin-bottom: 56px;
+    max-width: 720px;
+  }
+  .section-eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    margin-bottom: 18px;
+  }
+  .section-eyebrow::before {
+    content: "§";
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    color: var(--amber);
+  }
+  section h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 20px;
+  }
+  section h2 em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+  .section-deck {
+    font-size: 18.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    max-width: 620px;
+  }
+
+  /* ----- About ----- */
+  .about-body {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 24px;
+    line-height: 1.45;
+    color: var(--ink);
+    max-width: 760px;
+    letter-spacing: -0.005em;
+  }
+  .about-body p { margin-bottom: 28px; }
+  .about-body p:last-child { margin-bottom: 0; }
+  .about-body em { color: var(--amber); font-style: italic; }
+  .about-body strong { color: var(--ink); font-weight: 500; }
+
+  /* ----- Strengths grid ----- */
+  .strengths-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 720px) { .strengths-grid { grid-template-columns: 1fr; } }
+  .strength-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    transition: transform 0.25s ease, border-color 0.25s ease;
+  }
+  .strength-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--amber);
+  }
+  .strength-num {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 38px;
+    color: var(--amber);
+    line-height: 1;
+    margin-bottom: 18px;
+    letter-spacing: -0.02em;
+  }
+  .strength-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 23px;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .strength-desc {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  /* ----- Tech stack ----- */
+  .stack-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .stack-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    padding: 26px 30px;
+    border-bottom: 1px solid var(--border-soft);
+    align-items: start;
+  }
+  .stack-row:last-child { border-bottom: none; }
+  @media (max-width: 720px) {
+    .stack-row { grid-template-columns: 1fr; gap: 12px; padding: 22px 24px; }
+  }
+  .stack-category {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .stack-category .badge {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+  }
+  .stack-row:nth-child(2)  .badge { background: var(--amber); }
+  .stack-row:nth-child(3)  .badge { background: var(--rose); }
+  .stack-row:nth-child(4)  .badge { background: var(--teal); }
+  .stack-row:nth-child(5)  .badge { background: var(--plum); }
+  .stack-row:nth-child(6)  .badge { background: var(--amber-soft); }
+  .stack-row:nth-child(7)  .badge { background: var(--teal-soft); }
+  .stack-row:nth-child(8)  .badge { background: var(--rose-soft); }
+  .stack-row:nth-child(9)  .badge { background: var(--amber); }
+  .stack-row:nth-child(10) .badge { background: var(--plum); }
+
+  .stack-tools {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .tool {
+    display: inline-block;
+    padding: 5px 11px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tool:hover { color: var(--amber); border-color: var(--amber); }
+  .tool.featured { color: var(--amber); border-color: rgba(232, 176, 74, 0.4); background: rgba(232, 176, 74, 0.08); }
+
+  /* ----- Career trajectory (timeline) ----- */
+  .trajectory {
+    position: relative;
+    padding-left: 32px;
+  }
+  .trajectory::before {
+    content: "";
+    position: absolute;
+    left: 8px; top: 14px; bottom: 14px;
+    width: 1px;
+    background: var(--border);
+  }
+  .era {
+    position: relative;
+    padding-bottom: 56px;
+  }
+  .era:last-child { padding-bottom: 0; }
+  .era::before {
+    content: "";
+    position: absolute;
+    left: -31px; top: 14px;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--amber);
+    box-shadow: 0 0 0 4px var(--bg);
+  }
+  .era.current::before {
+    background: var(--amber);
+    box-shadow: 0 0 0 4px var(--bg), 0 0 16px rgba(232, 176, 74, 0.5);
+  }
+  .era-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .era-years {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .era-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    padding: 3px 10px;
+    background: var(--surface);
+    border-radius: 999px;
+    border: 1px solid var(--border);
+  }
+  .era-tag.now {
+    color: var(--amber);
+    border-color: var(--amber);
+  }
+  .era h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 28px;
+    letter-spacing: -0.015em;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .era h3 em { font-style: italic; color: var(--amber); font-weight: 300; }
+  .era p {
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    max-width: 680px;
+    margin-bottom: 12px;
+  }
+  .era-skills {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 10px;
+  }
+
+  /* ----- Engagements ----- */
+  .engagements-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 800px) { .engagements-grid { grid-template-columns: 1fr; } }
+  .engagement {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s, border-color 0.25s;
+  }
+  .engagement:hover {
+    transform: translateY(-2px);
+    border-color: var(--amber);
+  }
+  .engagement-domain {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .engagement-domain::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+  }
+  .engagement.rose .engagement-domain { color: var(--rose); }
+  .engagement.rose .engagement-domain::before { background: var(--rose); }
+  .engagement.teal .engagement-domain { color: var(--teal); }
+  .engagement.teal .engagement-domain::before { background: var(--teal); }
+  .engagement.plum .engagement-domain { color: var(--plum); }
+  .engagement.plum .engagement-domain::before { background: var(--plum); }
+
+  .engagement h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .engagement p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin-bottom: 18px;
+    flex-grow: 1;
+  }
+  .engagement-stack {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .engagement-stack .tool { font-size: 10.5px; padding: 3px 8px; }
+
+  /* ----- Education ----- */
+  .education-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 760px) { .education-grid { grid-template-columns: 1fr; } }
+  .credential {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 26px;
+    transition: border-color 0.25s;
+  }
+  .credential:hover { border-color: var(--amber); }
+  .credential-type {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  .credential h4 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+  .credential p {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  /* ----- Contact CTA ----- */
+  .contact-section {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-section::before {
+    content: "";
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--amber) 0%, transparent 65%);
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  .contact-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .contact-section h2 {
+    margin-bottom: 18px;
+  }
+  .contact-deck {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: 21px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin-bottom: 40px;
+    max-width: 540px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .contact-buttons {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+  .btn-primary {
+    background: var(--amber);
+    color: var(--bg);
+    border: 1px solid var(--amber);
+  }
+  .btn-primary:hover {
+    background: var(--amber-soft);
+    border-color: var(--amber-soft);
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--ink); transform: translateY(-1px); }
+
+  /* ----- Footer ----- */
+  footer {
+    padding: 48px 0 36px;
+    color: var(--ink-muted);
+    font-size: 13.5px;
+    background: var(--bg);
+  }
+  .footer-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a { color: var(--ink-soft); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--amber); }
+
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.7s, transform 0.7s; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ----- Topnav CTA (Field Guides) ----- */
+  .topnav a.topnav-cta {
+    color: var(--amber);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    margin: -7px 0;
+  }
+  .topnav a.topnav-cta:hover {
+    color: var(--amber);
+    border-color: var(--amber);
+    background: rgba(232, 176, 74, 0.08);
+    transform: translateY(-1px);
+  }
+
+  /* ----- Library / Field Guides ----- */
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+    margin-bottom: 36px;
+  }
+  @media (max-width: 800px) { .library-grid { grid-template-columns: 1fr; } }
+
+  .volume {
+    display: block;
+    padding: 36px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    text-decoration: none;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+  .volume::before {
+    content: "";
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, var(--amber) 0%, transparent 70%);
+    opacity: 0.04;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .volume--published:hover { transform: translateY(-3px); border-color: var(--amber); }
+  .volume--published:hover::before { opacity: 0.10; }
+
+  .volume--forthcoming { cursor: default; }
+  .volume--forthcoming::before {
+    background: radial-gradient(circle, var(--ink-muted) 0%, transparent 70%);
+    opacity: 0.025;
+  }
+
+  .volume-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+  .volume-status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+  }
+  .volume-status.published {
+    background: var(--amber);
+    color: var(--bg);
+  }
+  .volume-status.in-progress {
+    background: transparent;
+    color: var(--teal);
+    border: 1px solid var(--teal);
+  }
+  .volume-status.forthcoming {
+    background: transparent;
+    color: var(--ink-muted);
+    border: 1px solid var(--border);
+  }
+  .volume-cat { color: var(--ink-muted); }
+
+  .volume-number {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 92px;
+    line-height: 0.85;
+    color: var(--amber);
+    letter-spacing: -0.04em;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 1;
+  }
+  .volume--forthcoming .volume-number { color: var(--ink-muted); }
+
+  .volume-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 27px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    color: var(--ink);
+    position: relative;
+    z-index: 1;
+  }
+  .volume-title em {
+    font-style: italic;
+    color: var(--amber);
+    font-weight: 300;
+  }
+  .volume--forthcoming .volume-title { color: var(--ink-soft); }
+  .volume--forthcoming .volume-title em { color: var(--amber-soft); }
+
+  .volume-desc {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin-bottom: 24px;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
+  }
+  .volume--forthcoming .volume-desc { color: var(--ink-muted); }
+
+  .volume-stack {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .volume-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+    position: relative;
+    z-index: 1;
+  }
+  .volume-footer-left { display: flex; gap: 18px; }
+  .volume-arrow {
+    color: var(--amber);
+    font-size: 20px;
+    font-family: var(--font-display);
+    transition: transform 0.3s ease;
+    line-height: 1;
+  }
+  .volume--published:hover .volume-arrow { transform: translateX(4px); }
+
+  .library-footnote {
+    text-align: center;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .library-footnote p {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 19px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .library-footnote a {
+    color: var(--amber);
+    text-decoration: none;
+    border-bottom: 1px solid var(--amber);
+    transition: color 0.2s;
+  }
+  .library-footnote a:hover { color: var(--amber-soft); }
+
+
+  /* ============================================================
+   * MOBILE HARDENING (added by audit)
+   *
+   * Universal protections against horizontal scroll on phones.
+   * Read top-down: each rule has a specific reason.
+   * ============================================================ */
+
+  /* (1) Global safety net. Page never scrolls horizontally. If any
+         child overflows, it gets clipped — far better than the user
+         seeing a broken layout. */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* (2) Containers cap at viewport width. The padding stays, the
+         content area shrinks. */
+  .container, .container--narrow, .container--reading {
+    max-width: 100%;
+  }
+
+  /* (3) THE big one — wide <pre> in grid/flex parents.
+         By default, grid/flex items have min-width: auto, which lets
+         them expand to fit their content (including non-wrapping <pre>).
+         Setting min-width: 0 makes them respect the column track. */
+  .step-body, .step,
+  .chapter, .chapter > *,
+  .section-header,
+  .container > *,
+  .container--narrow > *,
+  .prose > *,
+  article {
+    min-width: 0;
+  }
+
+  /* (4) Code blocks and mockups: cap at 100% of their parent and
+         scroll horizontally inside themselves rather than pushing
+         the parent wider. */
+  .code-block, .mockup, .notebook, .file-box, .trace, .vscode,
+  .agent-table, .stack-table, .stats-panel, .command-palette {
+    max-width: 100%;
+  }
+  .code-body, .mockup-body, .cell-content, .code-block-body {
+    max-width: 100%;
+    /* white-space: pre is preserved; overflow handles long lines */
+  }
+
+  /* (5) Glow orbs: ensure their host section clips them. The hero
+         already has overflow:hidden but tutorial sections don't. */
+  section { overflow: hidden; }
+  /* But sections that intentionally allow sticky children must still
+     position correctly — sticky topbar is in a <header>, not a section,
+     so it's safe. */
+
+  /* (6) Hero typography scales down more aggressively. The big italic
+         display H1 was clipping awkwardly on 360-375px phones. */
+  @media (max-width: 480px) {
+    .hero h1, h1.h-display {
+      font-size: clamp(40px, 11vw, 64px);
+      line-height: 1.0;
+    }
+    .hero .deck, .hero-deck {
+      font-size: 17px;
+    }
+    .lead {
+      font-size: 19px;
+    }
+    h2, .h-section, .chapter h2, section h2 {
+      font-size: clamp(28px, 7vw, 38px);
+    }
+  }
+
+  /* (7) Tighter container padding on small phones to give content
+         more breathing room. */
+  @media (max-width: 480px) {
+    .container, .container--narrow, .container--reading {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    section {
+      padding: 56px 0;
+    }
+    .hero {
+      padding: 60px 0 40px;
+    }
+  }
+
+  /* (8) Code and terminal bodies use a smaller font on phones so more
+         characters fit before horizontal scroll kicks in. */
+  @media (max-width: 480px) {
+    .code-body, .mockup-body, .cell-content, .code-block-body {
+      font-size: 12.5px;
+      padding: 16px 18px;
+    }
+    .code-header, .mockup-header {
+      padding: 10px 14px;
+      font-size: 11px;
+    }
+  }
+
+  /* (9) Tap-target safety. Anything tappable should be at least 44px
+         tall — Apple's HIG and Google's Material both agree on this. */
+  @media (max-width: 720px) {
+    .btn { padding: 14px 22px; min-height: 44px; }
+    .topnav a, .footer-links a {
+      padding: 8px 0;
+      display: inline-block;
+    }
+    .toc-item, .toc-item-row {
+      padding: 14px 0;
+    }
+    .chip, .tool {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .contact-chip {
+      min-height: 40px;
+    }
+  }
+
+  /* (10) Stats panel grid (profile page) — was 2 cols, becomes 2 cols
+          still but with tighter padding. */
+  @media (max-width: 480px) {
+    .stats-grid .stat {
+      padding: 18px 14px;
+    }
+    .stat-num {
+      font-size: 36px;
+    }
+    .stat-label {
+      font-size: 9.5px;
+    }
+  }
+
+  /* (11) Tutorial step layout — keep numbers visible but smaller,
+          and stack on phones (this was already done but the gap was
+          too big). */
+  @media (max-width: 480px) {
+    .step {
+      gap: 16px !important;
+      padding: 48px 0 !important;
+    }
+    .step-number {
+      font-size: 56px !important;
+    }
+  }
+
+  /* (12) Trace diagram — already responsive, but ensure code chips
+          inside trace-action don't overflow. */
+  .trace-action code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (13) Inline code in callouts — was overflowing the callout body. */
+  .callout-body code, .callout code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (14) Long URLs in contact chips wrap rather than overflow. */
+  .contact-chip {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (15) Library / volume cards — long titles can wrap freely now. */
+  .volume-title, .h-display, .h-section {
+    overflow-wrap: break-word;
+  }
+
+  /* (16) Footer bottom row stacks on phones so it doesn't get cramped. */
+  @media (max-width: 480px) {
+    .footer-bottom, .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Shaik Maricar",
+  "jobTitle": "Principal Data & AI Architect",
+  "url": "https://shaikmaricar.com",
+  "image": "https://shaikmaricar.com/og-images/profile.png",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "New York",
+    "addressRegion": "NY",
+    "addressCountry": "US"
+  },
+  "sameAs": [
+    "https://linkedin.com/in/shaikmaricar",
+    "https://twitter.com/ShaikMaricar"
+  ],
+  "knowsAbout": [
+    "Agentic AI",
+    "Retrieval Augmented Generation",
+    "Multi-Agent Systems",
+    "LangGraph",
+    "LangChain",
+    "LlamaIndex",
+    "Model Context Protocol",
+    "Cloud Data Platforms",
+    "Snowflake",
+    "Databricks",
+    "Data Mesh",
+    "Data Fabric",
+    "Lakehouse Architecture",
+    "TOGAF Enterprise Architecture",
+    "Data Engineering",
+    "Kimball Dimensional Modeling"
+  ],
+  "alumniOf": {
+    "@type": "CollegeOrUniversity",
+    "name": "University of Madras"
+  },
+  "hasCredential": [
+    {"@type": "EducationalOccupationalCredential", "name": "AWS Certified"},
+    {"@type": "EducationalOccupationalCredential", "name": "Kimball University Certified — Data Warehouse & BI Lifecycle"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Shaik Maricar",
+  "url": "https://shaikmaricar.com",
+  "author": {"@type": "Person", "name": "Shaik Maricar"},
+  "description": "Principal Data & AI Architect — portfolio and field guides on Agentic AI, cloud data platforms, and enterprise architecture."
+}
+</script>
+</head>
+<body>
+
+<!-- ===================== TOPBAR ===================== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#top" class="brand" style="text-decoration:none;color:inherit">
+      <span class="brand-mark">SM</span>
+      <span class="brand-text">
+        <span class="brand-name">Shaik Maricar</span>
+        <span class="brand-role">Principal Data &amp; AI Architect</span>
+      </span>
+    </a>
+    <nav class="topnav">
+      <a href="#about">About</a>
+      <a href="#stack">Stack</a>
+      <a href="#engagements">Work</a>
+      <a href="#library" class="topnav-cta">Field Guides &rarr;</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="top" style="border-bottom:1px solid var(--border)">
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">Profile · Principal-Level</div>
+        <h1>
+          <span class="first">Shaik</span><br>
+          <span class="last">Maricar.</span>
+        </h1>
+        <p class="hero-role">
+          Principal Data &amp; AI Architect <em>—</em><br>
+          building the systems behind enterprise intelligence.
+        </p>
+        <div class="hero-tagline">
+          Enterprise Agentic AI <span>·</span> Data Mesh &amp; Lakehouse <span>·</span> Cloud Modernization <span>·</span> TOGAF EA
+        </div>
+        <p class="hero-deck">
+          Twenty-five years architecting the platforms that hold up modern businesses
+          &mdash; and over the last three, leading production-grade Agentic AI systems
+          for Fortune-500 programs. Operates at the intersection of hands-on
+          technical depth and principal-level client leadership.
+        </p>
+        <div class="hero-contact">
+          <a href="https://linkedin.com/in/shaikmaricar" target="_blank" rel="noopener" class="contact-chip">
+            <svg class="contact-chip-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 3a1 1 0 100 2 1 1 0 000-2zM2 6h2v8H2zM6 6h2v1.2A2.5 2.5 0 0110 6c1.7 0 2 1.1 2 2.6V14h-2v-4.6c0-.8-.3-1.4-1-1.4s-1 .6-1 1.4V14H6z"/></svg>
+            linkedin.com/in/shaikmaricar
+          </a>
+          <a href="https://twitter.com/ShaikMaricar" target="_blank" rel="noopener" class="contact-chip">
+            <svg class="contact-chip-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M12.5 3h2L10 8.2 15 13h-3.7L8.5 9.7 5.3 13H3.3l4.8-5.5L3 3h3.8L9.3 6.1zM11.7 12L5.6 4H4.5L10.6 12z"/></svg>
+            @ShaikMaricar
+          </a>
+          <span class="contact-chip">
+            <svg class="contact-chip-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6.5" r="2.5"/><path d="M8 1.5c-3 0-5 2.2-5 5C3 10 8 14.5 8 14.5S13 10 13 6.5c0-2.8-2-5-5-5z"/></svg>
+            New York, NY
+          </span>
+        </div>
+      </div>
+
+      <div class="stats-panel">
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-num">25<span class="plus">+</span></div>
+            <div class="stat-label">Years building<br>data systems</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">3<span class="plus">+</span></div>
+            <div class="stat-label">Years leading<br>Agentic AI delivery</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">10<span class="plus">+</span></div>
+            <div class="stat-label">Years on hybrid<br>cloud platforms</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">8<span class="plus">+</span></div>
+            <div class="stat-label">Years on Mesh<br>&amp; Lakehouse</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">4</div>
+            <div class="stat-label">Cloud MPP<br>platforms — SME</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">9<span class="plus">+</span></div>
+            <div class="stat-label">Industry<br>verticals served</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ABOUT ===================== -->
+<section id="about">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">About</div>
+      <h2>Twenty-five years, <em>one</em> long throughline.</h2>
+    </div>
+
+    <div class="about-body">
+      <p>
+        I design, build, and lead the data and AI systems that businesses run on.
+        That work has taken many shapes over the years &mdash; relational databases
+        and HA clusters in the early 2000s, big-data and SharePoint farms in the
+        2010s, cloud lakehouses and MPP warehouses in the late 2010s, and most
+        recently <em>production-grade Agentic AI</em> built on RAG, MCP, and
+        multi-agent orchestration.
+      </p>
+      <p>
+        The throughline is the same in all of them: take a fuzzy, ambiguous
+        business problem, decompose it into a system that <strong>actually works in
+        production</strong>, and lead the people who build it. I spend my time
+        somewhere between principal-level client conversations &mdash; KPIs,
+        steering committees, current-vs-target state &mdash; and hands-on
+        engineering with whatever stack the problem demands.
+      </p>
+      <p>
+        I'm a recognized authority across all four major cloud MPP platforms,
+        a TOGAF and Zachman practitioner, a Kimball-certified DW lifecycle
+        designer, and an active builder of LangGraph, AutoGen, CrewAI, and
+        MCP-based agent systems. <em>I still write the code.</em>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STRENGTHS ===================== -->
+<section id="strengths">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Signature Strengths</div>
+      <h2>Five things <em>I'm</em> known for.</h2>
+      <p class="section-deck">
+        Across two-and-a-half decades of delivery, these are the capabilities
+        clients and teams keep coming back for.
+      </p>
+    </div>
+
+    <div class="strengths-grid">
+      <div class="strength-card">
+        <div class="strength-num">01</div>
+        <h3 class="strength-title">Enterprise AI Architecture</h3>
+        <p class="strength-desc">
+          Design and deliver production Agentic AI and RAG systems &mdash; document
+          ingestion, embeddings, vector retrieval, tool/agent routing, MCP
+          integration, evaluation harnesses &mdash; aligned with enterprise identity,
+          security, and data governance.
+        </p>
+      </div>
+
+      <div class="strength-card">
+        <div class="strength-num">02</div>
+        <h3 class="strength-title">Cloud Data Platform Authority</h3>
+        <p class="strength-desc">
+          Recognized SME across Snowflake, Redshift, Azure Synapse, and BigQuery;
+          ten-plus years architecting hybrid on-prem / cloud data platforms on
+          AWS, Azure, and GCP at enterprise scale.
+        </p>
+      </div>
+
+      <div class="strength-card">
+        <div class="strength-num">03</div>
+        <h3 class="strength-title">Data Mesh, Fabric &amp; Lakehouse</h3>
+        <p class="strength-desc">
+          Eight-plus years implementing Data Mesh, Data Fabric, and Lakehouse
+          patterns with Lambda and Kappa architectures. Deep fluency in Kimball,
+          Inmon, and Data Vault 2.0 modeling traditions.
+        </p>
+      </div>
+
+      <div class="strength-card">
+        <div class="strength-num">04</div>
+        <h3 class="strength-title">Enterprise Architecture Rigor</h3>
+        <p class="strength-desc">
+          TOGAF ADM and Zachman practitioner. SIPOC, current/target state, gap
+          analysis, source-to-target mapping, migration planning, and change
+          management &mdash; executed at steering-committee level.
+        </p>
+      </div>
+
+      <div class="strength-card">
+        <div class="strength-num">05</div>
+        <h3 class="strength-title">Principal-Level Delivery Leadership</h3>
+        <p class="strength-desc">
+          Lead requirements gathering and KPI negotiation directly with C-suite
+          and business stakeholders. Recruit, build, and mentor distributed
+          engineering teams. Drive agile delivery across complex, ambiguous
+          programs.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STACK ===================== -->
+<section id="stack">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Technology Stack</div>
+      <h2>The <em>working</em> inventory.</h2>
+      <p class="section-deck">
+        Tools I've shipped with in production. Featured items are areas of deepest
+        recent work.
+      </p>
+    </div>
+
+    <div class="stack-table">
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>Agentic AI / GenAI</div>
+        <div class="stack-tools">
+          <span class="tool featured">LangChain</span>
+          <span class="tool featured">LlamaIndex</span>
+          <span class="tool featured">LangGraph</span>
+          <span class="tool featured">Claude Agent SDK</span>
+          <span class="tool featured">OpenAI Agent SDK</span>
+          <span class="tool featured">Google ADK</span>
+          <span class="tool">Claude Code</span>
+          <span class="tool">Haystack</span>
+          <span class="tool">AutoGen</span>
+          <span class="tool">CrewAI</span>
+          <span class="tool">RAG</span>
+          <span class="tool">GraphRAG</span>
+          <span class="tool">MCP</span>
+          <span class="tool">Vector stores</span>
+          <span class="tool">Encoder–decoder transformers</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>Cloud Platforms</div>
+        <div class="stack-tools">
+          <span class="tool featured">AWS</span>
+          <span class="tool featured">Azure</span>
+          <span class="tool featured">GCP</span>
+          <span class="tool">VPC</span><span class="tool">EC2</span><span class="tool">S3</span>
+          <span class="tool">Lambda</span><span class="tool">Glue</span><span class="tool">EMR</span>
+          <span class="tool">Kinesis</span><span class="tool">Redshift</span><span class="tool">Athena</span>
+          <span class="tool">ECS / EKS</span><span class="tool">Step Functions</span>
+          <span class="tool">Synapse</span><span class="tool">ADF</span><span class="tool">ADLS</span>
+          <span class="tool">Databricks</span><span class="tool">Event Hubs</span><span class="tool">AKS</span>
+          <span class="tool">BigQuery</span><span class="tool">Dataproc</span><span class="tool">Dataflow</span>
+          <span class="tool">Cloud Composer</span><span class="tool">Cloud Functions</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>Data Platforms</div>
+        <div class="stack-tools">
+          <span class="tool featured">Snowflake</span>
+          <span class="tool featured">Databricks</span>
+          <span class="tool">Azure Synapse</span><span class="tool">Redshift</span>
+          <span class="tool">BigQuery</span><span class="tool">Presto / Trino</span>
+          <span class="tool">Cassandra</span><span class="tool">MongoDB</span>
+          <span class="tool">DynamoDB</span><span class="tool">HBase</span>
+          <span class="tool">Hadoop</span><span class="tool">Spark</span>
+          <span class="tool">Kudu</span><span class="tool">Hive</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>Streaming &amp; ETL</div>
+        <div class="stack-tools">
+          <span class="tool featured">Kafka</span>
+          <span class="tool featured">Kinesis</span>
+          <span class="tool">Spark Streaming</span><span class="tool">Event Hubs</span>
+          <span class="tool">Event Grid</span><span class="tool">Informatica</span>
+          <span class="tool">Talend</span><span class="tool">SSIS</span>
+          <span class="tool">Matillion</span><span class="tool">AWS Glue</span>
+          <span class="tool">NiFi</span><span class="tool">Alteryx</span><span class="tool">ADF</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>RDBMS</div>
+        <div class="stack-tools">
+          <span class="tool featured">MS SQL Server</span>
+          <span class="tool featured">Oracle 11g / 12c</span>
+          <span class="tool">PostgreSQL</span><span class="tool">MySQL</span>
+          <span class="tool">Always-On AGs</span><span class="tool">RAC</span>
+          <span class="tool">Data Guard</span><span class="tool">Query tuning</span>
+          <span class="tool">HA / DR</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>BI &amp; Visualization</div>
+        <div class="stack-tools">
+          <span class="tool featured">Tableau</span>
+          <span class="tool featured">Power BI</span>
+          <span class="tool">Looker</span><span class="tool">Qlik</span>
+          <span class="tool">Grafana</span><span class="tool">OBIEE</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>Orchestration / DevOps</div>
+        <div class="stack-tools">
+          <span class="tool featured">Airflow</span>
+          <span class="tool featured">Kubernetes</span>
+          <span class="tool">ADF</span><span class="tool">Matillion</span>
+          <span class="tool">Jenkins</span><span class="tool">Control-M</span>
+          <span class="tool">Docker</span><span class="tool">EKS / AKS</span>
+          <span class="tool">CI/CD pipelines</span><span class="tool">CodePipeline</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>Programming</div>
+        <div class="stack-tools">
+          <span class="tool featured">Python</span>
+          <span class="tool">Django</span><span class="tool">Flask</span><span class="tool">FastAPI</span>
+          <span class="tool">C# / .NET</span>
+          <span class="tool">JavaScript / TypeScript</span>
+          <span class="tool">React</span><span class="tool">SvelteKit</span>
+          <span class="tool">Java / Spring Boot</span>
+          <span class="tool">Scala</span><span class="tool">PowerShell</span>
+          <span class="tool">T-SQL</span><span class="tool">PL/SQL</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>EA &amp; PM</div>
+        <div class="stack-tools">
+          <span class="tool featured">TOGAF ADM</span>
+          <span class="tool featured">Zachman</span>
+          <span class="tool">SIPOC</span>
+          <span class="tool">Current / target state</span>
+          <span class="tool">Gap analysis</span>
+          <span class="tool">Source-to-target mapping</span>
+          <span class="tool">Jira</span><span class="tool">Confluence</span>
+          <span class="tool">SharePoint</span><span class="tool">Smartsheet</span>
+          <span class="tool">Wrike</span><span class="tool">ClickUp</span><span class="tool">Monday.com</span>
+        </div>
+      </div>
+
+      <div class="stack-row">
+        <div class="stack-category"><span class="badge"></span>RPA</div>
+        <div class="stack-tools">
+          <span class="tool">Automation Anywhere</span>
+          <span class="tool">UiPath</span>
+          <span class="tool">Blue Prism</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TRAJECTORY ===================== -->
+<section id="trajectory">
+  <div class="container container--narrow">
+    <div class="section-header">
+      <div class="section-eyebrow">Career Trajectory</div>
+      <h2>A long arc, in <em>five</em> chapters.</h2>
+      <p class="section-deck">
+        Each phase represents a body of work and a stack I built deep mastery in
+        before the next era arrived.
+      </p>
+    </div>
+
+    <div class="trajectory">
+      <div class="era current">
+        <div class="era-meta">
+          <span class="era-years">Nov 2022 — Present</span>
+          <span class="era-tag now">Current</span>
+        </div>
+        <h3>Principal Engineer <em>—</em> Data, AI &amp; Software</h3>
+        <p>
+          Principal-level architect and delivery lead for enterprise AI and data
+          modernization engagements across logistics, retail, hospitality,
+          cosmetics, telecom, and medical IoT. Architect production Agentic AI
+          platforms &mdash; multi-agent orchestration, RAG / MCP pipelines, and
+          agent SDKs &mdash; integrated with enterprise identity, governance, and
+          observability. Own technical strategy, KPI definition, current-vs-target
+          state analysis, and steering-committee governance for C-suite sponsors.
+        </p>
+        <div class="era-skills">
+          <span class="tool">LangGraph</span><span class="tool">AutoGen</span>
+          <span class="tool">CrewAI</span><span class="tool">RAG / MCP</span>
+          <span class="tool">Snowflake</span><span class="tool">Databricks</span>
+          <span class="tool">TOGAF ADM</span>
+        </div>
+      </div>
+
+      <div class="era">
+        <div class="era-meta">
+          <span class="era-years">Mar 2019 — Nov 2022</span>
+          <span class="era-tag">Cloud Big Data</span>
+        </div>
+        <h3>Lead Big Data <em>Engineering</em> Architect</h3>
+        <p>
+          Defined big-data architectures, technical data-flow diagrams, and
+          platform recommendations for enterprise client proposals. Built project
+          roadmaps, data and collaboration standards, and recruited engineering
+          teams. Established SME reputation across all four major cloud MPP
+          platforms — Snowflake, Redshift, Synapse, BigQuery — and produced
+          executive proposal decks that converted technical architecture into
+          client value.
+        </p>
+        <div class="era-skills">
+          <span class="tool">Snowflake</span><span class="tool">Redshift</span>
+          <span class="tool">Synapse</span><span class="tool">BigQuery</span>
+          <span class="tool">Spark</span><span class="tool">Airflow</span>
+        </div>
+      </div>
+
+      <div class="era">
+        <div class="era-meta">
+          <span class="era-years">Mar 2012 — Mar 2019</span>
+          <span class="era-tag">Big Data &amp; SharePoint</span>
+        </div>
+        <h3>Database Systems Engineer &amp; SharePoint <em>Architect</em></h3>
+        <p>
+          Led enterprise SQL Server consolidation, upgrade, and optimization;
+          mentored a 5-developer team on query tuning, code review, and change
+          control. Drove a major Big Data initiative on AWS &mdash; Kafka, Kinesis,
+          Lambda, Redshift, Aurora, Athena &mdash; alongside Hadoop, Spark, MongoDB,
+          and HBase. Architected HA/DR with WSFC clusters and Always-On
+          Availability Groups, and ran SharePoint 2010 → 2013 → 2016 upgrades
+          on fully PowerShell-automated, load-balanced farms.
+        </p>
+        <div class="era-skills">
+          <span class="tool">SQL Server</span><span class="tool">AWS</span>
+          <span class="tool">Kafka</span><span class="tool">Hadoop / Spark</span>
+          <span class="tool">SharePoint</span><span class="tool">Kimball DW</span>
+        </div>
+      </div>
+
+      <div class="era">
+        <div class="era-meta">
+          <span class="era-years">Jul 2008 — Mar 2012</span>
+          <span class="era-tag">Enterprise DBA Lead</span>
+        </div>
+        <h3>Lead Database Systems Engineer &amp; <em>SharePoint</em> Admin</h3>
+        <p>
+          Led a 24/7 global shared-services DBA team and owned uptime for 100+ SQL
+          Server instances. Designed and deployed an 8TB → 32TB SharePoint
+          2007/2010 production farm. Defined corporate-wide DB roadmap, SLAs
+          (RPO/RTO), run books, and standards. Administered Oracle 11g RAC and
+          Data Guard, PL/SQL development, and RMAN backup strategy.
+        </p>
+        <div class="era-skills">
+          <span class="tool">SQL Server clustering</span><span class="tool">Always-On</span>
+          <span class="tool">Oracle 11g RAC</span><span class="tool">Data Guard</span>
+          <span class="tool">SharePoint 2010</span>
+        </div>
+      </div>
+
+      <div class="era">
+        <div class="era-meta">
+          <span class="era-years">1993 — 2008</span>
+          <span class="era-tag">Foundations</span>
+        </div>
+        <h3>SQL DBA, .NET Developer, <em>Software</em> Programmer</h3>
+        <p>
+          Progressed from senior software programmer to senior SQL DBA across
+          financial, retail, banking, and government payroll domains &mdash;
+          building the foundation in data engineering, application architecture,
+          and production operations that underpins the principal-level work
+          today. Configured SQL clusters, replication, and mirroring; built
+          multi-tier ASP.NET / C# applications; wrote PL/SQL and Visual C++ for
+          eight-person delivery teams.
+        </p>
+        <div class="era-skills">
+          <span class="tool">SQL 2000</span><span class="tool">Oracle</span>
+          <span class="tool">ASP.NET / C#</span><span class="tool">Visual C++</span>
+          <span class="tool">SSIS / DTS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ENGAGEMENTS ===================== -->
+<section id="engagements">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Signature Engagements</div>
+      <h2>Selected work, by <em>industry</em>.</h2>
+      <p class="section-deck">
+        A representative slice of recent client engagements. Each one combined
+        principal-level architecture, hands-on engineering, and team leadership.
+      </p>
+    </div>
+
+    <div class="engagements-grid">
+      <article class="engagement">
+        <div class="engagement-domain">Logistics &amp; Freight</div>
+        <h3>Global Freight Logistics Modernization</h3>
+        <p>
+          Led a five-engineer team integrating fleet management, transportation
+          management, and warehouse management systems across regions. Built
+          pipelines from on-prem operational sources into a cloud lakehouse, with
+          executive tracking and tracing dashboards.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">Azure Databricks</span>
+          <span class="tool">Snowflake</span>
+          <span class="tool">Cosmos DB</span>
+          <span class="tool">Tableau</span>
+        </div>
+      </article>
+
+      <article class="engagement rose">
+        <div class="engagement-domain">Restaurants &amp; Hospitality</div>
+        <h3>Multi-Brand Global Restaurant Data Platform</h3>
+        <p>
+          Architected the enterprise data warehouse and data marts for a
+          multi-brand restaurant group's global operations &mdash; built on a
+          Snowflake + Azure stack with Databricks, ADF, ADLS, and BLOB storage.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">Snowflake</span>
+          <span class="tool">Databricks</span>
+          <span class="tool">ADF / ADLS</span>
+          <span class="tool">Python / Spark</span>
+        </div>
+      </article>
+
+      <article class="engagement teal">
+        <div class="engagement-domain">Entertainment / Cinema</div>
+        <h3>Customer Retention Analytics &mdash; Cinema Chain</h3>
+        <p>
+          Designed an end-to-end customer retention platform on AWS &mdash;
+          ingestion, transformation, marketing-cloud integration, and
+          self-service analytics &mdash; for a major Latin American cinema chain.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">AWS Redshift</span>
+          <span class="tool">Glue / Lambda</span>
+          <span class="tool">Airflow</span>
+          <span class="tool">Power BI / Tableau</span>
+        </div>
+      </article>
+
+      <article class="engagement plum">
+        <div class="engagement-domain">Beauty &amp; Cosmetics</div>
+        <h3>Global Cosmetics EA &amp; Cloud Migration Roadmap</h3>
+        <p>
+          TOGAF-driven enterprise architecture engagement &mdash; stakeholder
+          interviews, SIPOC, current/target architecture, implementation roadmap,
+          and steering-committee artifacts for a cloud migration program.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">TOGAF ADM</span>
+          <span class="tool">SIPOC</span>
+          <span class="tool">Current/Target State</span>
+          <span class="tool">Roadmap</span>
+        </div>
+      </article>
+
+      <article class="engagement">
+        <div class="engagement-domain">Hospitality</div>
+        <h3>Hospitality EDW Migration</h3>
+        <p>
+          Migrated a legacy SQL-based enterprise data warehouse to a modern Azure
+          Synapse / ADLS / ADF architecture. Owned rollout and decommission
+          roadmap, team resourcing, and the rebuild itself across an Agile
+          delivery cadence.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">Azure Synapse</span>
+          <span class="tool">ADLS</span>
+          <span class="tool">ADF</span>
+          <span class="tool">Agile</span>
+        </div>
+      </article>
+
+      <article class="engagement rose">
+        <div class="engagement-domain">Telecom</div>
+        <h3>Real-Time Competitive Pricing Pipeline</h3>
+        <p>
+          Designed and built a near-real-time competitive pricing intelligence
+          pipeline &mdash; web scraping into MongoDB, staged through S3 and
+          Snowpipe into Snowflake, surfaced in executive Tableau dashboards.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">MongoDB</span>
+          <span class="tool">S3 / Snowpipe</span>
+          <span class="tool">Snowflake</span>
+          <span class="tool">Tableau</span>
+        </div>
+      </article>
+
+      <article class="engagement teal">
+        <div class="engagement-domain">Medical IoT</div>
+        <h3>Medical IoT Global Analytics Strategy</h3>
+        <p>
+          Assessed the analytics storage and processing strategy for a global
+          medical IoT data expansion. Delivered architecture recommendations
+          balancing latency, scale, regulatory geography, and cost.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">Architecture review</span>
+          <span class="tool">IoT analytics</span>
+          <span class="tool">Storage strategy</span>
+        </div>
+      </article>
+
+      <article class="engagement plum">
+        <div class="engagement-domain">Energy / Fuel</div>
+        <h3>Canadian Fuel Pricing Platform</h3>
+        <p>
+          Built an integrated fuel pricing platform on AWS, blending internal
+          operational data with third-party market and demographic feeds for
+          executive pricing intelligence.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">AWS Redshift</span>
+          <span class="tool">S3</span>
+          <span class="tool">Python</span>
+          <span class="tool">CloudWatch</span>
+        </div>
+      </article>
+
+      <article class="engagement">
+        <div class="engagement-domain">Retail Finance</div>
+        <h3>Retail Financial Modernization</h3>
+        <p>
+          Modernized a retailer's financial close and forecasting stack &mdash;
+          Oracle EBS (GL/AP/PO/COA) and Anaplan forecasting unified on a GCP
+          analytics platform with self-service Power BI reporting. Delivered
+          Agile with a nine-contractor team.
+        </p>
+        <div class="engagement-stack">
+          <span class="tool">BigQuery</span>
+          <span class="tool">Dataproc</span>
+          <span class="tool">Control-M / OBIEE</span>
+          <span class="tool">Power BI</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LIBRARY ===================== -->
+<section id="library">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Library</div>
+      <h2>Detailed field <em>guides</em>, written for engineers.</h2>
+      <p class="section-deck">
+        Beginner-friendly walkthroughs of the systems I build for clients &mdash; full working code at every step, no shortcuts. New volumes added as they are finished.
+      </p>
+    </div>
+
+    <div class="library-grid">
+
+      <!-- Vol 01 - PUBLISHED -->
+      <a href="/local-llm/" class="volume volume--published">
+        <div class="volume-meta">
+          <span class="volume-status published">Published</span>
+          <span class="volume-cat">AI &middot; Foundations</span>
+        </div>
+        <div class="volume-number">01</div>
+        <h3 class="volume-title">Run your first <em>local</em> LLM</h3>
+        <p class="volume-desc">
+          From a fresh Python install to a working Jupyter notebook talking to a model running entirely on your machine. Zero API keys. Zero cloud bills.
+        </p>
+        <div class="volume-stack">
+          <span class="tool">Python</span>
+          <span class="tool">Ollama</span>
+          <span class="tool">LlamaIndex</span>
+          <span class="tool">VS Code</span>
+        </div>
+        <div class="volume-footer">
+          <div class="volume-footer-left">
+            <span>Beginner</span>
+            <span>~20 min</span>
+          </div>
+          <span class="volume-arrow">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Vol 02 - PUBLISHED -->
+      <a href="/multi-agent/" class="volume volume--published">
+        <div class="volume-meta">
+          <span class="volume-status published">Published</span>
+          <span class="volume-cat">AI &middot; Multi-Agent</span>
+        </div>
+        <div class="volume-number">02</div>
+        <h3 class="volume-title">A team of <em>cooperating</em> AI agents</h3>
+        <p class="volume-desc">
+          Building three specialised agents &mdash; supervisor, researcher, thinker &mdash; that work together as a state graph. Deterministic routing, no hallucinated control flow.
+        </p>
+        <div class="volume-stack">
+          <span class="tool">LangGraph</span>
+          <span class="tool">Tavily</span>
+          <span class="tool">OpenRouter</span>
+          <span class="tool">LangChain</span>
+        </div>
+        <div class="volume-footer">
+          <div class="volume-footer-left">
+            <span>Intermediate</span>
+            <span>~25 min</span>
+          </div>
+          <span class="volume-arrow">&rarr;</span>
+        </div>
+      </a>
+
+      <!-- Vol 03 - IN PROGRESS -->
+      <div class="volume volume--forthcoming">
+        <div class="volume-meta">
+          <span class="volume-status in-progress">In Progress</span>
+          <span class="volume-cat">AI &middot; Production</span>
+        </div>
+        <div class="volume-number">03</div>
+        <h3 class="volume-title">RAG in <em>production</em></h3>
+        <p class="volume-desc">
+          Beyond the demo: chunking strategies that actually work, evaluation harnesses, retrieval quality monitoring, and the gotchas that bite at scale.
+        </p>
+        <div class="volume-footer">
+          <div class="volume-footer-left">
+            <span>Intermediate</span>
+            <span>Coming soon</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vol 04 - FORTHCOMING -->
+      <div class="volume volume--forthcoming">
+        <div class="volume-meta">
+          <span class="volume-status forthcoming">Forthcoming</span>
+          <span class="volume-cat">Data &middot; Cloud</span>
+        </div>
+        <div class="volume-number">04</div>
+        <h3 class="volume-title">Building a cloud <em>lakehouse</em> from scratch</h3>
+        <p class="volume-desc">
+          Provisioning, ingestion patterns, and the trade-offs between Lambda and Kappa architectures &mdash; with working code on Snowflake and Databricks.
+        </p>
+        <div class="volume-footer">
+          <div class="volume-footer-left">
+            <span>Intermediate</span>
+            <span>Planned</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vol 05 - FORTHCOMING -->
+      <div class="volume volume--forthcoming">
+        <div class="volume-meta">
+          <span class="volume-status forthcoming">Forthcoming</span>
+          <span class="volume-cat">Architecture &middot; EA</span>
+        </div>
+        <div class="volume-number">05</div>
+        <h3 class="volume-title"><em>TOGAF</em> for engineers</h3>
+        <p class="volume-desc">
+          A practical walkthrough of the ADM cycle as used on real engagements. SIPOC, current/target state, gap analysis &mdash; minus the academic prose.
+        </p>
+        <div class="volume-footer">
+          <div class="volume-footer-left">
+            <span>Beginner</span>
+            <span>Planned</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vol 06 - FORTHCOMING -->
+      <div class="volume volume--forthcoming">
+        <div class="volume-meta">
+          <span class="volume-status forthcoming">Forthcoming</span>
+          <span class="volume-cat">Foundations &middot; SQL</span>
+        </div>
+        <div class="volume-number">06</div>
+        <h3 class="volume-title">SQL <em>internals</em> &mdash; how queries actually run</h3>
+        <p class="volume-desc">
+          What really happens when you press F5 on a SELECT statement: parsing, plan caching, optimisation, execution. Indexes, statistics, and query tuning by intuition.
+        </p>
+        <div class="volume-footer">
+          <div class="volume-footer-left">
+            <span>Beginner</span>
+            <span>Planned</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="library-footnote">
+      <p>
+        Six volumes &mdash; and counting. Subscribe via
+        <a href="https://linkedin.com/in/shaikmaricar" target="_blank" rel="noopener">LinkedIn</a>
+        for new releases.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== EDUCATION ===================== -->
+<section id="education">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow">Education &amp; Certifications</div>
+      <h2>Credentials, in <em>brief</em>.</h2>
+    </div>
+
+    <div class="education-grid">
+      <div class="credential">
+        <div class="credential-type">Degree</div>
+        <h4>Bachelor of Business Administration</h4>
+        <p>University of Madras, India</p>
+      </div>
+      <div class="credential">
+        <div class="credential-type">Cloud Certification</div>
+        <h4>AWS Certified</h4>
+        <p>Amazon Web Services</p>
+      </div>
+      <div class="credential">
+        <div class="credential-type">Data Warehouse Certification</div>
+        <h4>Kimball University Certified</h4>
+        <p>Data Warehouse &amp; Business Intelligence Lifecycle</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CONTACT CTA ===================== -->
+<section class="contact-section" id="contact">
+  <div class="container">
+    <div class="contact-content">
+      <div class="section-eyebrow" style="justify-content:center">Get in touch</div>
+      <h2>Designing your next <em>data or AI</em> platform?</h2>
+      <p class="contact-deck">
+        I'm always interested in conversations about Agentic AI architecture,
+        cloud data modernization, and complex enterprise transformations.
+      </p>
+      <div class="contact-buttons">
+        <a href="https://linkedin.com/in/shaikmaricar" target="_blank" rel="noopener" class="btn btn-primary">Connect on LinkedIn</a>
+        <a href="https://twitter.com/ShaikMaricar" target="_blank" rel="noopener" class="btn btn-secondary">Follow on Twitter</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <span>© Shaik Maricar · Principal Data &amp; AI Architect</span>
+      <div class="footer-links">
+        <a href="#library">Field Guides</a>
+        <a href="https://linkedin.com/in/shaikmaricar" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://twitter.com/ShaikMaricar" target="_blank" rel="noopener">Twitter</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: "0px 0px -60px 0px" });
+
+  document.querySelectorAll("section").forEach((el) => {
+    el.classList.add("reveal");
+    observer.observe(el);
+  });
+</script>
+
+</body>
+</html>

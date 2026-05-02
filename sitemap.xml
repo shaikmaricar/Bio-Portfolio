@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <url>
+    <loc>https://shaikmaricar.com/</loc>
+    <lastmod>2026-05-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://shaikmaricar.com/og-images/profile.png</image:loc>
+      <image:title>Shaik Maricar — Principal Data &amp; AI Architect</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://shaikmaricar.com/local-llm/</loc>
+    <lastmod>2026-05-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://shaikmaricar.com/og-images/local-llm.png</image:loc>
+      <image:title>Run Your First Local LLM</image:title>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://shaikmaricar.com/multi-agent/</loc>
+    <lastmod>2026-05-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <image:image>
+      <image:loc>https://shaikmaricar.com/og-images/multi-agent.png</image:loc>
+      <image:title>A Team of Cooperating AI Agents</image:title>
+    </image:image>
+  </url>
+
+</urlset>
