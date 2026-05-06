@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VideoRAG — Search All Three Signals in a Video</title>
+<meta name="description" content="Complete code walkthrough for VideoRAG — three-signal semantic video retrieval that searches spoken audio, on-screen text, and detected objects in a single query." />
+<meta name="keywords" content="VideoRAG, ASR, OCR, object detection, Whisper, EasyOCR, YOLOv8, CLIP, Qdrant, FastAPI, semantic video search" />
+<meta name="author" content="Shaik Maricar" />
+<meta name="theme-color" content="#0e0d0c" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><radialGradient id='g' cx='30%25' cy='30%25' r='80%25'><stop offset='0%25' stop-color='%23e8b04a'/><stop offset='70%25' stop-color='%23d97862'/></radialGradient></defs><circle cx='32' cy='32' r='30' fill='url(%23g)'/><text x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-weight='600' font-size='26' fill='%230e0d0c'>SM</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300..800&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+ *  FIELD MANUAL — Theme Stylesheet
+ *  Author: Shaik Maricar
+ *  License: All rights reserved
+ *
+ *  A warm-dark editorial design system for tutorials, profiles,
+ *  and reference-style pages. Built around three tokens:
+ *
+ *    – Cream ink on near-black warm paper
+ *    – Amber as the accent of authority (italic display)
+ *    – Teal / Rose / Plum as supporting accents
+ *
+ *  Typography mixes Fraunces (display, italic-leaning), Manrope
+ *  (body, neutral), and JetBrains Mono (code, technical labels).
+ *
+ *  Usage:
+ *    1. Include the Google Fonts link in <head>
+ *    2. Link this stylesheet
+ *    3. Use the documented component classes
+ *  ============================================================ */
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 01. DESIGN TOKENS
+ * ───────────────────────────────────────────────────────────── */
+:root {
+  /* — Surfaces (warm-tinted dark scale) — */
+  --bg:           #0e0d0c;   /* page background — near-black, warm */
+  --surface:      #1a1815;   /* default elevated surface */
+  --surface-2:    #221f1b;   /* second elevation */
+  --surface-3:    #2a2620;   /* third elevation */
+  --border:       #2c2924;   /* default border */
+  --border-soft:  #221f1a;   /* hairline / divider */
+
+  /* — Ink (cream scale) — */
+  --ink:          #ece6d8;   /* primary text */
+  --ink-soft:     #b8b0a0;   /* secondary text */
+  --ink-muted:    #807868;   /* tertiary / labels / metadata */
+
+  /* — Accents — */
+  --amber:        #e8b04a;   /* primary accent — for emphasis, links, CTAs */
+  --amber-soft:   #f3cb7d;   /* hover / lighter variant */
+  --teal:         #6fbfb0;   /* secondary accent — for "tip", "info" */
+  --teal-soft:    #98d4c7;
+  --rose:         #d97862;   /* tertiary — for warnings, errors, key strings */
+  --rose-soft:    #e89580;
+  --plum:         #9a86b8;   /* quaternary — for builtins, numerics in code */
+
+  /* — Typography stacks — */
+  --font-display: "Fraunces", "Times New Roman", Georgia, serif;
+  --font-body:    "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:    "JetBrains Mono", "Courier New", monospace;
+
+  /* — Type scale (line-height: 1.65 default body) — */
+  --fs-body:      17px;
+  --fs-small:     14.5px;
+  --fs-tiny:      12px;
+  --fs-label:     11px;       /* mono labels, all caps, letter-spaced */
+
+  /* — Spacing rhythm (8-pt grid) — */
+  --space-1: 8px;   --space-2: 16px;  --space-3: 24px;
+  --space-4: 32px;  --space-5: 48px;  --space-6: 64px;
+  --space-7: 80px;  --space-8: 100px;
+
+  /* — Radii — */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* — Shadows (deep, dark — for elevation cues) — */
+  --shadow-md: 0 24px 60px -24px rgba(0,0,0,0.5);
+  --shadow-lg: 0 24px 60px -24px rgba(0,0,0,0.7);
+  --shadow-glow-amber: 0 0 24px rgba(232, 176, 74, 0.4);
+
+  /* — Container widths — */
+  --container-default: 1180px;
+  --container-narrow:  760px;
+  --container-reading: 680px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 02. RESET & BASE
+ * ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.65;
+  font-weight: 400;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle film-grain overlay — lifts the dark surfaces */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 100;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+
+::selection { background: var(--amber); color: var(--bg); }
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 03. LAYOUT PRIMITIVES
+ * ───────────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: var(--container-default);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  position: relative;
+}
+.container--narrow  { max-width: var(--container-narrow); }
+.container--reading { max-width: var(--container-reading); }
+
+/* Glow — soft blurred orb for hero atmosphere
+   Use as: <div class="glow glow--amber" style="top:-200px;left:-150px"></div> */
+.glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.32;
+}
+.glow--amber { background: var(--amber); }
+.glow--teal  { background: var(--teal); opacity: 0.18; }
+.glow--rose  { background: var(--rose); opacity: 0.22; }
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 04. TYPOGRAPHY
+ *
+ *  Convention:
+ *   – Display (h1, h2, h3) uses Fraunces, italic on emphasised words
+ *   – Body uses Manrope
+ *   – Labels, code, technical metadata use JetBrains Mono, uppercase
+ *   – Italic in display = always tinted amber (the accent of authority)
+ * ───────────────────────────────────────────────────────────── */
+
+/* The italic emphasis helper — applies wherever you want a word
+   highlighted in the amber italic style. Use as:
+     <h1>Run your <em>local</em> LLM</h1>
+   or for explicit override: <span class="emph">whatever</span>      */
+.emph, .display em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--amber);
+}
+
+/* Display headline — H1 hero scale */
+.h-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+.h-display em { font-style: italic; font-weight: 300; color: var(--amber); }
+
+/* Section heading — H2 */
+.h-section {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(32px, 4.6vw, 50px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.h-section em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+/* Sub-heading — H3 / chapter title */
+.h-sub {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 23px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.h-sub em { font-style: italic; color: var(--amber); font-weight: 300; }
+
+/* Lead paragraph — italic display serif for emphasis below a heading */
+.lead {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  max-width: 640px;
+}
+
+/* Eyebrow — small uppercase label that introduces a section */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--amber);
+  margin-bottom: var(--space-3);
+}
+/* Variant: with section-mark (§) */
+.eyebrow--section::before {
+  content: "§";
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  margin-right: 4px;
+  color: var(--amber);
+}
+/* Variant: with horizontal rule lead-in */
+.eyebrow--rule::before {
+  content: "";
+  width: 32px;
+  height: 1px;
+  background: var(--amber);
+}
+
+/* Section label — mono-uppercase text used for footers / metadata */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-muted);
+}
+
+/* Default body paragraph styling inside content blocks */
+.prose p {
+  margin-bottom: 18px;
+  color: var(--ink-soft);
+  max-width: 660px;
+}
+.prose p strong { color: var(--ink); font-weight: 600; }
+.prose p code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1px 7px;
+  border-radius: var(--radius-sm);
+  color: var(--amber-soft);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 05. NAVIGATION — Top bar
+ *
+ *  Pattern: brand on left, nav on right, sticky with blurred bg.
+ *  Markup:
+ *    <header class="topbar">
+ *      <div class="topbar-inner">
+ *        <a class="brand">…</a>
+ *        <nav class="topnav">…</nav>
+ *      </div>
+ *    </header>
+ * ───────────────────────────────────────────────────────────── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(14, 13, 12, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-soft);
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px var(--space-4);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The signature gradient orb — used as logo on every page */
+.brand-mark {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--amber), var(--rose) 70%);
+  box-shadow: var(--shadow-glow-amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-mark--lg { width: 34px; height: 34px; }
+
+/* Initials inside the orb (e.g., "SM") */
+.brand-mark .initials {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--bg);
+}
+
+.topnav {
+  display: flex;
+  gap: 28px;
+}
+.topnav a {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  color: var(--ink-soft);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  transition: color 0.2s;
+}
+.topnav a:hover { color: var(--amber); }
+
+/* CTA-style nav link (pill outline) */
+.topnav a.topnav-cta {
+  color: var(--amber);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  margin: -7px 0;
+  transition: background 0.25s, border-color 0.25s, transform 0.25s;
+}
+.topnav a.topnav-cta:hover {
+  border-color: var(--amber);
+  background: rgba(232, 176, 74, 0.08);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 720px) {
+  .topnav { display: none; }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 06. SECTION & PAGE STRUCTURE
+ *
+ *  Convention: every major content block is a <section> with
+ *  generous vertical padding. Use .section-header for the
+ *  eyebrow + heading + deck combo. Use .hero on the first section.
+ * ───────────────────────────────────────────────────────────── */
+section {
+  padding: var(--space-8) 0;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The hero — first section of every page. Adds extra padding,
+   relative positioning for glow children, and overflow hidden so
+   glows don't bleed past the edges. */
+.hero {
+  padding: 100px 0 80px;
+  overflow: hidden;
+}
+
+.section-header {
+  margin-bottom: var(--space-5);
+  max-width: 720px;
+}
+.section-deck {
+  font-size: 18.5px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  max-width: 620px;
+  margin-top: 12px;
+}
+
+/* Tech-stack chip row — used in heroes below the headline. */
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: var(--space-4);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 07. CHIPS, PILLS & TAGS
+ *
+ *  – .chip     — outlined pill, mono text (used for tech stack)
+ *  – .chip-dot — colored dot prefix
+ *  – .tool     — small inline tool tag (no dot)
+ * ───────────────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  color: var(--ink-soft);
+  background: var(--surface);
+}
+.chip-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+/* Convenience colour variants */
+.chip-dot--amber { background: var(--amber); }
+.chip-dot--teal  { background: var(--teal); }
+.chip-dot--rose  { background: var(--rose); }
+.chip-dot--plum  { background: var(--plum); }
+
+.tool {
+  display: inline-block;
+  padding: 5px 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  transition: color 0.2s, border-color 0.2s;
+}
+.tool:hover { color: var(--amber); border-color: var(--amber); }
+.tool.featured {
+  color: var(--amber);
+  border-color: rgba(232, 176, 74, 0.4);
+  background: rgba(232, 176, 74, 0.08);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 08. CALLOUTS
+ *
+ *  Used to emphasise a tip, warning, or aside. Pattern:
+ *    <div class="callout callout--tip">
+ *      <div class="callout-icon">i</div>
+ *      <div class="callout-body">
+ *        <span class="callout-title">Heads up</span>
+ *        Body text…
+ *      </div>
+ *    </div>
+ * ───────────────────────────────────────────────────────────── */
+.callout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  padding: 18px 22px;
+  margin: var(--space-3) 0;
+  background: var(--surface);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.callout--note { border-left-color: var(--amber); }
+.callout--warn { border-left-color: var(--rose); }
+.callout--tip  { border-left-color: var(--teal); }
+
+.callout-icon {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+  background: rgba(232, 176, 74, 0.15);
+  color: var(--amber);
+}
+.callout--warn .callout-icon { background: rgba(217, 120, 98, 0.15); color: var(--rose); }
+.callout--tip  .callout-icon { background: rgba(111, 191, 176, 0.15); color: var(--teal); }
+
+.callout-body {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.callout-body strong { color: var(--ink); }
+
+.callout-title {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+  margin-bottom: 4px;
+  display: block;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 09. CARDS
+ *
+ *  Generic elevated card. Has a subtle radial-glow on hover.
+ *  Compose with .card--interactive for hover lift.
+ * ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.card--interactive {
+  transition: transform 0.25s ease, border-color 0.25s ease;
+  cursor: pointer;
+}
+.card--interactive:hover {
+  transform: translateY(-3px);
+  border-color: var(--amber);
+}
+.card--glow::before {
+  content: "";
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  background: radial-gradient(circle, var(--amber) 0%, transparent 70%);
+  opacity: 0.04;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.card--interactive.card--glow:hover::before { opacity: 0.10; }
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 10. CODE BLOCKS
+ *
+ *  Pattern:
+ *    <div class="code-block">
+ *      <div class="code-header">
+ *        <span class="code-lang">Python</span>
+ *        <span>filename.py</span>
+ *      </div>
+ *      <pre class="code-body">
+ *        <span class="py-keyword">from</span> …
+ *      </pre>
+ *    </div>
+ *
+ *  IMPORTANT: use <pre>, not <div>, for .code-body, .mockup-body,
+ *  .cell-content. CSS sets white-space: pre and zeroes the margin,
+ *  but the element type matters for whitespace handling.
+ * ───────────────────────────────────────────────────────────── */
+.code-block {
+  margin: 26px 0;
+  background: #0a0908;          /* slightly deeper than --bg, for contrast */
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.code-lang { color: var(--amber); }
+
+.code-body {
+  padding: 22px 24px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.75;
+  color: #d8d2c4;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+/* Python syntax highlighting tokens */
+.py-keyword   { color: var(--rose); }
+.py-builtin   { color: var(--plum); }
+.py-string    { color: var(--amber-soft); }
+.py-number    { color: var(--teal); }
+.py-comment   { color: var(--ink-muted); font-style: italic; }
+.py-fn        { color: var(--teal-soft); }
+.py-class     { color: var(--amber); }
+.py-decorator { color: var(--rose-soft); font-style: italic; }
+.py-self      { color: var(--ink-soft); font-style: italic; }
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 11. TERMINAL / VS CODE / NOTEBOOK MOCKUPS
+ *
+ *  Visual mockups of dev environments — used in tutorials when
+ *  showing what the user will see on screen. Match the .code-block
+ *  structure but with traffic-light dots in the header.
+ * ───────────────────────────────────────────────────────────── */
+.mockup {
+  margin: 28px 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: #0a0908;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.mockup-dots { display: flex; gap: 7px; }
+.mockup-dots span {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #3a342c;
+}
+.mockup-dots span:nth-child(1) { background: #ed6a5e; }
+.mockup-dots span:nth-child(2) { background: #f4be4f; }
+.mockup-dots span:nth-child(3) { background: #61c454; }
+.mockup-title {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  color: var(--ink-muted);
+  margin-left: 8px;
+}
+.mockup-body {
+  padding: 20px 22px;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #d8d2c4;
+  overflow-x: auto;
+  white-space: pre;
+  margin: 0;
+}
+
+/* Terminal token colors */
+.prompt        { color: var(--teal); user-select: none; }
+.prompt-path   { color: var(--amber-soft); }
+.cmd-comment   { color: var(--ink-muted); font-style: italic; }
+.cmd-flag      { color: var(--plum); }
+.cmd-string    { color: var(--amber-soft); }
+.cmd-output    { color: var(--ink-muted); }
+.cmd-success   { color: var(--teal); }
+
+/* Blinking cursor for live-feeling terminals */
+.cursor {
+  display: inline-block;
+  width: 8px; height: 14px;
+  background: var(--amber);
+  vertical-align: middle;
+  animation: blink 1.1s infinite;
+  margin-left: 2px;
+}
+@keyframes blink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 12. BUTTONS & CTAs
+ * ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn--primary {
+  background: var(--amber);
+  color: var(--bg);
+  border-color: var(--amber);
+}
+.btn--primary:hover {
+  background: var(--amber-soft);
+  border-color: var(--amber-soft);
+  transform: translateY(-1px);
+}
+.btn--secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--border);
+}
+.btn--secondary:hover {
+  border-color: var(--ink);
+  transform: translateY(-1px);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 13. FOOTER
+ * ───────────────────────────────────────────────────────────── */
+footer.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 60px 0 40px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  background: var(--bg);
+}
+.site-footer h5 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+.site-footer ul { list-style: none; }
+.site-footer li { margin-bottom: 8px; }
+.site-footer a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.site-footer a:hover { color: var(--amber); }
+.footer-bottom {
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  color: var(--ink-muted);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 14. ANIMATIONS
+ *
+ *  .reveal — used with IntersectionObserver to fade-in sections
+ *            as they scroll into view.
+ * ───────────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+ * 15. RESPONSIVE — sensible defaults
+ * ───────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  body { font-size: 16px; }
+  section { padding: var(--space-7) 0; }
+}
+@media (max-width: 480px) {
+  .container { padding: 0 20px; }
+}
+
+
+/* ============================================================
+ * 16. MOBILE HARDENING
+ * Universal protections against horizontal scroll on phones.
+ * ============================================================ */
+  
+
+  /* (1) Global safety net. Page never scrolls horizontally. If any
+         child overflows, it gets clipped — far better than the user
+         seeing a broken layout. */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* (2) Containers cap at viewport width. The padding stays, the
+         content area shrinks. */
+  .container, .container--narrow, .container--reading {
+    max-width: 100%;
+  }
+
+  /* (3) THE big one — wide <pre> in grid/flex parents.
+         By default, grid/flex items have min-width: auto, which lets
+         them expand to fit their content (including non-wrapping <pre>).
+         Setting min-width: 0 makes them respect the column track. */
+  .step-body, .step,
+  .chapter, .chapter > *,
+  .section-header,
+  .container > *,
+  .container--narrow > *,
+  .prose > *,
+  article {
+    min-width: 0;
+  }
+
+  /* (4) Code blocks and mockups: cap at 100% of their parent and
+         scroll horizontally inside themselves rather than pushing
+         the parent wider. */
+  .code-block, .mockup, .notebook, .file-box, .trace, .vscode,
+  .agent-table, .stack-table, .stats-panel, .command-palette {
+    max-width: 100%;
+  }
+  .code-body, .mockup-body, .cell-content, .code-block-body {
+    max-width: 100%;
+    /* white-space: pre is preserved; overflow handles long lines */
+  }
+
+  /* (5) Glow orbs: ensure their host section clips them. The hero
+         already has overflow:hidden but tutorial sections don't. */
+  section { overflow: hidden; }
+  /* But sections that intentionally allow sticky children must still
+     position correctly — sticky topbar is in a <header>, not a section,
+     so it's safe. */
+
+  /* (6) Hero typography scales down more aggressively. The big italic
+         display H1 was clipping awkwardly on 360-375px phones. */
+  @media (max-width: 480px) {
+    .hero h1, h1.h-display {
+      font-size: clamp(40px, 11vw, 64px);
+      line-height: 1.0;
+    }
+    .hero .deck, .hero-deck {
+      font-size: 17px;
+    }
+    .lead {
+      font-size: 19px;
+    }
+    h2, .h-section, .chapter h2, section h2 {
+      font-size: clamp(28px, 7vw, 38px);
+    }
+  }
+
+  /* (7) Tighter container padding on small phones to give content
+         more breathing room. */
+  @media (max-width: 480px) {
+    .container, .container--narrow, .container--reading {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    section {
+      padding: 56px 0;
+    }
+    .hero {
+      padding: 60px 0 40px;
+    }
+  }
+
+  /* (8) Code and terminal bodies use a smaller font on phones so more
+         characters fit before horizontal scroll kicks in. */
+  @media (max-width: 480px) {
+    .code-body, .mockup-body, .cell-content, .code-block-body {
+      font-size: 12.5px;
+      padding: 16px 18px;
+    }
+    .code-header, .mockup-header {
+      padding: 10px 14px;
+      font-size: 11px;
+    }
+  }
+
+  /* (9) Tap-target safety. Anything tappable should be at least 44px
+         tall — Apple's HIG and Google's Material both agree on this. */
+  @media (max-width: 720px) {
+    .btn { padding: 14px 22px; min-height: 44px; }
+    .topnav a, .footer-links a {
+      padding: 8px 0;
+      display: inline-block;
+    }
+    .toc-item, .toc-item-row {
+      padding: 14px 0;
+    }
+    .chip, .tool {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .contact-chip {
+      min-height: 40px;
+    }
+  }
+
+  /* (10) Stats panel grid (profile page) — was 2 cols, becomes 2 cols
+          still but with tighter padding. */
+  @media (max-width: 480px) {
+    .stats-grid .stat {
+      padding: 18px 14px;
+    }
+    .stat-num {
+      font-size: 36px;
+    }
+    .stat-label {
+      font-size: 9.5px;
+    }
+  }
+
+  /* (11) Tutorial step layout — keep numbers visible but smaller,
+          and stack on phones (this was already done but the gap was
+          too big). */
+  @media (max-width: 480px) {
+    .step {
+      gap: 16px !important;
+      padding: 48px 0 !important;
+    }
+    .step-number {
+      font-size: 56px !important;
+    }
+  }
+
+  /* (12) Trace diagram — already responsive, but ensure code chips
+          inside trace-action don't overflow. */
+  .trace-action code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (13) Inline code in callouts — was overflowing the callout body. */
+  .callout-body code, .callout code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (14) Long URLs in contact chips wrap rather than overflow. */
+  .contact-chip {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* (15) Library / volume cards — long titles can wrap freely now. */
+  .volume-title, .h-display, .h-section {
+    overflow-wrap: break-word;
+  }
+
+  /* (16) Footer bottom row stacks on phones so it doesn't get cramped. */
+  @media (max-width: 480px) {
+    .footer-bottom, .footer-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+  }
+
+/* ══ Page-specific styles ══════════════════════════════════════════════════ */
+
+/* TOC grid */
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:var(--space-4)}
+.toc-card{display:flex;flex-direction:column;gap:6px;padding:20px 22px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);text-decoration:none;transition:transform .22s ease,border-color .22s ease;position:relative;overflow:hidden}
+.toc-card::before{content:"";position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;opacity:.04;transition:opacity .3s;pointer-events:none}
+.toc-card:hover{transform:translateY(-3px);border-color:var(--amber)}
+.toc-card:hover::before{opacity:.11}
+.toc-card--amber::before{background:var(--amber)}
+.toc-card--teal::before{background:var(--teal)}
+.toc-card--rose::before{background:var(--rose)}
+.toc-card--plum::before{background:var(--plum)}
+.toc-number{font-family:var(--font-mono);font-size:10px;color:var(--ink-muted);letter-spacing:.14em;text-transform:uppercase}
+.toc-filename{font-family:var(--font-mono);font-size:13px;color:var(--amber);font-weight:500;margin:3px 0}
+.toc-card--teal .toc-filename{color:var(--teal)}
+.toc-card--rose .toc-filename{color:var(--rose)}
+.toc-card--plum .toc-filename{color:var(--plum)}
+.toc-desc{font-size:11.5px;color:var(--ink-muted);line-height:1.5}
+.toc-badge{display:inline-block;padding:2px 8px;border-radius:var(--radius-pill);font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-top:6px;background:rgba(232,176,74,.12);color:var(--amber);border:1px solid rgba(232,176,74,.25)}
+.toc-card--teal .toc-badge{background:rgba(111,191,176,.12);color:var(--teal);border-color:rgba(111,191,176,.25)}
+.toc-card--rose .toc-badge{background:rgba(217,120,98,.12);color:var(--rose);border-color:rgba(217,120,98,.25)}
+
+/* File badges */
+.file-badge{display:inline-flex;align-items:center;gap:10px;padding:6px 16px;background:rgba(232,176,74,.08);border:1px solid rgba(232,176,74,.28);border-radius:var(--radius-pill);font-family:var(--font-mono);font-size:13px;color:var(--amber);margin-bottom:var(--space-4)}
+.file-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--amber)}
+.file-badge--teal{background:rgba(111,191,176,.08);border-color:rgba(111,191,176,.28);color:var(--teal)}
+.file-badge--teal .file-badge-dot{background:var(--teal)}
+.file-badge--rose{background:rgba(217,120,98,.08);border-color:rgba(217,120,98,.28);color:var(--rose)}
+.file-badge--rose .file-badge-dot{background:var(--rose)}
+.file-badge--plum{background:rgba(154,134,184,.08);border-color:rgba(154,134,184,.28);color:var(--plum)}
+.file-badge--plum .file-badge-dot{background:var(--plum)}
+.badge-new{margin-left:6px;padding:2px 8px;border-radius:var(--radius-pill);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(111,191,176,.15);color:var(--teal);border:1px solid rgba(111,191,176,.3)}
+.badge-updated{margin-left:6px;padding:2px 8px;border-radius:var(--radius-pill);font-size:9px;letter-spacing:.12em;text-transform:uppercase;background:rgba(232,176,74,.12);color:var(--amber);border:1px solid rgba(232,176,74,.25)}
+
+/* Signal cards (ASR / OCR / DET) */
+.signal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin:var(--space-5) 0}
+.signal-card{padding:26px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);position:relative;overflow:hidden}
+.signal-card::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;opacity:.06;pointer-events:none}
+.signal-card--amber::before{background:var(--amber)}
+.signal-card--teal::before{background:var(--teal)}
+.signal-card--rose::before{background:var(--rose)}
+.signal-acronym{font-family:var(--font-display);font-size:40px;font-weight:300;letter-spacing:-.03em;line-height:1;margin-bottom:12px}
+.signal-card--amber .signal-acronym{color:var(--amber)}
+.signal-card--teal .signal-acronym{color:var(--teal)}
+.signal-card--rose .signal-acronym{color:var(--rose)}
+.signal-full{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:10px}
+.signal-desc{font-size:14px;color:var(--ink-soft);line-height:1.65}
+.signal-model{margin-top:12px;padding-top:12px;border-top:1px solid var(--border-soft);font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);display:flex;align-items:center;gap:6px}
+.signal-model-dot{width:5px;height:5px;border-radius:50%}
+
+/* enriched_text diagram */
+.enrich-flow{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:var(--space-4) 0}
+.enrich-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border-soft)}
+.enrich-row:last-child{border-bottom:none}
+.enrich-label{width:140px;flex-shrink:0;padding:14px 18px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;border-right:1px solid var(--border-soft)}
+.enrich-label--asr{color:var(--amber);background:rgba(232,176,74,.05)}
+.enrich-label--ocr{color:var(--teal);background:rgba(111,191,176,.05)}
+.enrich-label--det{color:var(--rose);background:rgba(217,120,98,.05)}
+.enrich-content{flex:1;padding:14px 18px;font-family:var(--font-mono);font-size:12.5px;color:var(--ink-soft);line-height:1.6;background:#0a0908}
+
+/* pipeline flow */
+.flow-wrap{display:flex;align-items:stretch;gap:0;margin:var(--space-5) 0;overflow-x:auto;padding-bottom:8px}
+.flow-node{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:105px}
+.flow-box{width:100%;padding:12px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);line-height:1.4}
+.flow-box strong{display:block;font-size:11.5px;margin-bottom:3px}
+.flow-box.flow-new{border-color:rgba(111,191,176,.4);background:rgba(111,191,176,.05)}
+
+.flow-box.flow-updated{border-color:rgba(232,176,74,.35);background:rgba(232,176,74,.04)}
+
+
+.flow-arr{display:flex;align-items:center;padding:0 3px;color:var(--border);font-size:18px;padding-top:10px;flex-shrink:0}
+.flow-lbl{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-muted);text-align:center;max-width:100px;line-height:1.4}
+
+/* decision table */
+.dtable{width:100%;border-collapse:collapse;margin:var(--space-4) 0;font-size:13.5px}
+.dtable th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-muted);border-bottom:1px solid var(--border);padding:10px 16px;text-align:left;background:var(--surface)}
+.dtable td{padding:12px 16px;border-bottom:1px solid var(--border-soft);color:var(--ink-soft);line-height:1.55;vertical-align:top}
+.dtable td:first-child{font-family:var(--font-mono);font-size:12px;color:var(--amber-soft);white-space:nowrap}
+.dtable tr:last-child td{border-bottom:none}
+
+/* step list */
+.step-list{display:flex;flex-direction:column;gap:0;margin:var(--space-4) 0;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.step-item{display:flex;gap:20px;padding:16px 22px;border-bottom:1px solid var(--border-soft);align-items:flex-start}
+.step-item:last-child{border-bottom:none}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;color:var(--amber);flex-shrink:0;margin-top:1px}
+.step-title{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.step-body{font-size:13px;color:var(--ink-soft);line-height:1.6}
+.step-new .step-num{color:var(--teal);border-color:rgba(111,191,176,.35)}
+
+/* back-to-top link */
+.back-to-toc{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-muted);text-decoration:none;margin-top:var(--space-5);transition:color .2s}
+.back-to-toc:hover{color:var(--amber)}
+
+.file-section{padding:var(--space-8) 0;border-bottom:1px solid var(--border)}
+
+/* signal legend pill row */
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin:var(--space-3) 0}
+.legend-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-pill);font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);background:var(--surface)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+</style>
+</head>
+<body>
+
+<!-- ════ TOPBAR ════════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/" style="text-decoration:none;color:inherit">
+      <span class="brand-mark"><span class="initials">SM</span></span>
+      <span>Shaik Maricar</span>
+    </a>
+    <nav class="topnav">
+      <a href="/#about">About</a>
+      <a href="/#stack">Stack</a>
+      <a href="/#engagements">Work</a>
+      <a href="/#library" class="topnav-cta">Field Guides &rarr;</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ════ HERO ══════════════════════════════════════════════════════════════ -->
+<section class="hero" style="border-bottom:1px solid var(--border)">
+  <div class="glow glow--amber" style="top:-180px;left:-120px;width:600px;height:600px"></div>
+  <div class="glow glow--teal"  style="top:40px;right:-200px;width:520px;height:520px"></div>
+  <div class="glow glow--rose"  style="bottom:-100px;left:42%;width:360px;height:360px"></div>
+  <div class="container">
+    <div class="eyebrow eyebrow--rule">Technical Reference · VideoRAG Pipeline</div>
+    <h1 class="h-display">VideoRAG —<br>search <em>all three</em><br>signals in a video.</h1>
+    <p class="lead" style="margin-top:28px">
+      A complete code walkthrough for VideoRAG — a pipeline that combines
+      Automatic Speech Recognition, Optical Character Recognition, and
+      Object Detection so that every spoken word, visible text, and physical
+      object in a video becomes semantically searchable from a single query.
+    </p>
+    <div style="margin-top:36px;display:flex;flex-wrap:wrap;gap:10px">
+      <span class="chip"><span class="chip-dot chip-dot--amber"></span>ASR · faster-whisper</span>
+      <span class="chip"><span class="chip-dot chip-dot--teal"></span>OCR · EasyOCR</span>
+      <span class="chip"><span class="chip-dot chip-dot--rose"></span>DET · YOLOv8</span>
+      <span class="chip"><span class="chip-dot chip-dot--plum"></span>Qdrant HNSW</span>
+      <span class="chip"><span class="chip-dot chip-dot--amber"></span>OpenAI Embeddings</span>
+      <span class="chip"><span class="chip-dot chip-dot--teal"></span>OpenCLIP ViT-L/14</span>
+      <span class="chip"><span class="chip-dot chip-dot--rose"></span>FFmpeg</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════ EXECUTIVE SUMMARY ═════════════════════════════════════════════════ -->
+<section id="summary">
+  <div class="container container--narrow prose">
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Executive Summary</div>
+      <h2 class="h-section">What is <em>VideoRAG</em>?</h2>
+    </div>
+
+    <p>
+      VideoRAG is a production-grade <strong>Retrieval-Augmented Generation pipeline for video</strong>.
+      Given any video file — a lecture, a product demo, a conference talk, a meeting recording —
+      it indexes every searchable signal the video contains and lets you query it in plain language,
+      receiving back the exact timestamped moments that are semantically relevant.
+    </p>
+    <p>
+      This pipeline expands the definition of "searchable signal." Where earlier implementations indexed only
+      what was <em>spoken</em>, this system adds two further signal streams: what was <em>written on screen</em>
+      and what was <em>physically visible</em> in the frame. These three streams are fused into a
+      single embedding per chunk, meaning every search query is implicitly a search across all three
+      dimensions simultaneously — with no extra work from the caller.
+    </p>
+
+    <!-- Signal cards -->
+    <div class="signal-grid">
+      <div class="signal-card signal-card--amber">
+        <div class="signal-acronym">ASR</div>
+        <div class="signal-full">Automatic Speech Recognition</div>
+        <div class="signal-desc">
+          Converts the video's audio track into a precise word-level transcript
+          with millisecond timestamps. Every spoken word — explanations,
+          narration, off-hand remarks — becomes searchable text.
+          Queries like <em>"explain gradient descent"</em> match here.
+        </div>
+        <div class="signal-model">
+          <span class="signal-model-dot" style="background:var(--amber)"></span>
+          faster-whisper large-v3 &middot; CTranslate2 &middot; VAD filter
+        </div>
+      </div>
+
+      <div class="signal-card signal-card--teal">
+        <div class="signal-acronym">OCR</div>
+        <div class="signal-full">Optical Character Recognition</div>
+        <div class="signal-desc">
+          Reads all visible text from high-resolution video frames — slide titles,
+          whiteboard equations, code on screen, UI labels, diagram annotations.
+          Text that is <em>shown</em> but never spoken becomes searchable.
+          Queries like <em>"find the slide that says backpropagation"</em> match here.
+        </div>
+        <div class="signal-model">
+          <span class="signal-model-dot" style="background:var(--teal)"></span>
+          EasyOCR &middot; 1280px frames &middot; GPU-accelerated
+        </div>
+      </div>
+
+      <div class="signal-card signal-card--rose">
+        <div class="signal-acronym">DET</div>
+        <div class="signal-full">Object Detection</div>
+        <div class="signal-desc">
+          Identifies objects and their spatial positions in video frames — people,
+          laptops, whiteboards, cameras, markers, diagrams. Generates a natural-language
+          scene description per chunk. Queries like
+          <em>"where is someone writing on the whiteboard"</em> match here.
+        </div>
+        <div class="signal-model">
+          <span class="signal-model-dot" style="background:var(--rose)"></span>
+          YOLOv8s &middot; COCO 80 classes &middot; spatial labelling
+        </div>
+      </div>
+    </div>
+
+    <h3 class="h-sub">How the three signals combine</h3>
+    <p>
+      For every 30-second VideoChunk the pipeline creates an <strong>enriched text</strong>
+      string that merges all three signal outputs. This string — not just the transcript —
+      is what gets sent to the OpenAI text embedding model. The result is that a single
+      cosine-similarity vector search covers all three dimensions at once.
+    </p>
+
+    <div class="enrich-flow">
+      <div class="enrich-row">
+        <div class="enrich-label enrich-label--asr">ASR</div>
+        <div class="enrich-content">The attention mechanism computes a weighted sum of all token representations, allowing every position to directly attend to every other position in the sequence.</div>
+      </div>
+      <div class="enrich-row">
+        <div class="enrich-label enrich-label--ocr">OCR</div>
+        <div class="enrich-content"><span style="color:var(--ink-muted)">On-screen text:</span> Attention is All You Need | Q = XW_Q | K = XW_K | def scaled_dot_product_attention(Q, K, V):</div>
+      </div>
+      <div class="enrich-row">
+        <div class="enrich-label enrich-label--det">DET</div>
+        <div class="enrich-content"><span style="color:var(--ink-muted)">Scene shows:</span> person presenting at center, whiteboard at right, laptop at bottom-left.</div>
+      </div>
+    </div>
+
+    <p>
+      A query like <em>"self-attention formula with Q K V"</em> would score highly against
+      the OCR section of this chunk even if the speaker never uttered those exact letters.
+      A query like <em>"find the whiteboard segment"</em> would score highly against the
+      DET section. A query like <em>"attention mechanism explanation"</em> would score
+      highest against the ASR transcript. One vector, three doors.
+    </p>
+
+    <p>
+      To make sense of this, you have to look at what those three-letter acronyms actually represent.
+    </p>
+
+    <h3 class="h-sub">The <em>three doors</em> — data channels</h3>
+
+    <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:var(--space-4) 0">
+
+      <!-- ASR door -->
+      <div style="border-bottom:1px solid var(--border-soft)">
+        <div style="display:flex;align-items:center;gap:14px;padding:18px 22px 14px;border-bottom:1px solid var(--border-soft)">
+          <span style="font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--amber);background:rgba(232,176,74,.1);border:1px solid rgba(232,176,74,.25);padding:4px 12px;border-radius:var(--radius-pill);letter-spacing:.1em">ASR</span>
+          <span style="font-size:14px;color:var(--ink);font-weight:500">Automatic Speech Recognition</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-left:auto">the transcript</span>
+        </div>
+        <div style="padding:16px 22px;font-size:14px;color:var(--ink-soft);line-height:1.7">
+          This is the text of <strong style="color:var(--ink)">everything the speaker said</strong> — converted from audio to words by the Whisper model, with word-level timestamps.
+          <div style="margin-top:12px;padding:12px 16px;background:var(--surface-2);border-radius:var(--radius-md);border-left:3px solid var(--amber)">
+            <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--amber);display:block;margin-bottom:5px">Why "attention mechanism explanation" fits here</span>
+            When a professor explains a concept they use many words and full sentences. The transcript is the richest place to find a conceptual explanation — the kind of fluid, connected language that describes <em>how</em> something works. No slide or visual object captures that nuance the way continuous speech does.
+          </div>
+        </div>
+      </div>
+
+      <!-- OCR door -->
+      <div style="border-bottom:1px solid var(--border-soft)">
+        <div style="display:flex;align-items:center;gap:14px;padding:18px 22px 14px;border-bottom:1px solid var(--border-soft)">
+          <span style="font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--teal);background:rgba(111,191,176,.1);border:1px solid rgba(111,191,176,.25);padding:4px 12px;border-radius:var(--radius-pill);letter-spacing:.1em">OCR</span>
+          <span style="font-size:14px;color:var(--ink);font-weight:500">Optical Character Recognition</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-left:auto">on-screen text</span>
+        </div>
+        <div style="padding:16px 22px;font-size:14px;color:var(--ink-soft);line-height:1.7">
+          Text detected <strong style="color:var(--ink)">visually on screen</strong> — slide titles, whiteboard equations, code in an IDE, diagram labels, captions. Text that is <em>shown</em> but never spoken aloud.
+          <div style="margin-top:12px;padding:12px 16px;background:var(--surface-2);border-radius:var(--radius-md);border-left:3px solid var(--teal)">
+            <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--teal);display:block;margin-bottom:5px">Why "self-attention formula with Q K V" fits here</span>
+            A speaker might say <em>"look at this math"</em> — but the actual formula <code>QK<sup>T</sup></code> is written on the slide. Even if the speaker never says "Q, K, and V" out loud, the OCR channel <em>sees</em> those characters on screen and matches your query against them. The formula lives in OCR, not the transcript.
+          </div>
+        </div>
+      </div>
+
+      <!-- DET door -->
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;padding:18px 22px 14px;border-bottom:1px solid var(--border-soft)">
+          <span style="font-family:var(--font-mono);font-size:13px;font-weight:500;color:var(--rose);background:rgba(217,120,98,.1);border:1px solid rgba(217,120,98,.25);padding:4px 12px;border-radius:var(--radius-pill);letter-spacing:.1em">DET</span>
+          <span style="font-size:14px;color:var(--ink);font-weight:500">Object Detection</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--ink-muted);margin-left:auto">visual objects</span>
+        </div>
+        <div style="padding:16px 22px;font-size:14px;color:var(--ink-soft);line-height:1.7">
+          The AI identifies <strong style="color:var(--ink)">physical objects present in video frames</strong> — not text, but things: a person, a laptop, a whiteboard, a marker, a camera. YOLOv8 runs on each frame and records what it sees, where it is, and for how long it persists.
+          <div style="margin-top:12px;padding:12px 16px;background:var(--surface-2);border-radius:var(--radius-md);border-left:3px solid var(--rose)">
+            <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--rose);display:block;margin-bottom:5px">Why "find the whiteboard segment" fits here</span>
+            The system isn't looking for the <em>word</em> "whiteboard" — it's looking for the <em>physical object</em>. The DET metadata records which chunks had a whiteboard present in the frame, regardless of whether it was mentioned or written on. It's a purely visual signal: <em>"a whiteboard was visible here."</em>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 class="h-sub"><em>One vector,</em> three doors — hybrid search</h3>
+    <p>This phrase is a compact way of describing how the retrieval system works under the hood.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;margin:var(--space-4) 0">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(232,176,74,.12);border:1px solid rgba(232,176,74,.3);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--amber);flex-shrink:0;margin-top:1px">1</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px">The vector</div>
+          <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.65">When you type a query, the system converts your words into a mathematical representation — a 1536-dimensional floating-point vector. This single vector encodes the <em>semantic meaning</em> of what you are looking for.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(111,191,176,.12);border:1px solid rgba(111,191,176,.3);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--teal);flex-shrink:0;margin-top:1px">2</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px">The doors</div>
+          <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.65">The system compares that one vector against every stored chunk embedding. Each chunk embedding was built from <em>all three signal streams</em> — ASR transcript, OCR on-screen text, and DET scene description — fused into a single vector. So searching one vector simultaneously reaches through all three doors at once.</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(217,120,98,.12);border:1px solid rgba(217,120,98,.3);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;color:var(--rose);flex-shrink:0;margin-top:1px">3</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px">The scoring</div>
+          <div style="font-size:13.5px;color:var(--ink-soft);line-height:1.65">The score for each result is the cosine similarity between the query vector and the chunk vector. A chunk that contains matching ASR <em>and</em> matching OCR <em>and</em> matching DET will score higher than one that only matches a single signal — the fusion naturally rewards multi-signal relevance.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout--tip">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">The big picture</span>
+        A truly smart video search doesn't just look at <strong>what was said</strong> (ASR). It looks at <strong>what was shown</strong> (OCR) and <strong>what was happening</strong> (DET) simultaneously — all in a single retrieval pass — to give the most accurate result. That is the core insight VideoRAG is built on.
+      </div>
+    </div>
+
+    <div class="callout callout--note">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">How to read this document</span>
+        Sections follow <strong>data-flow order</strong> through the pipeline.
+        <code>ocr_engine.py</code> and <code>object_detector.py</code> appear between
+        chunking and embedding — exactly where they execute in the ingest flow.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TABLE OF CONTENTS ══════════════════════════════════════════════════ -->
+<section id="toc">
+  <div class="container">
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Index</div>
+      <h2 class="h-section">Table of <em>contents</em></h2>
+      <p class="section-deck">Ten Python modules across two new files and six updated files, plus supporting infrastructure. Click any card to jump directly to that section.</p>
+    </div>
+
+    <div class="toc-grid" style="margin-top:20px">
+      <a href="#config"        class="toc-card toc-card--amber"><div class="toc-number">01</div><div class="toc-filename">config.py</div><div class="toc-desc">All tunable parameters including new OCR and DET thresholds.</div></a>
+      <a href="#pipeline"      class="toc-card toc-card--amber"><div class="toc-number">02</div><div class="toc-filename">pipeline.py</div><div class="toc-desc">Orchestrator. VideoChunk data model + enriched_text fusion.</div></a>
+      <a href="#extractor"     class="toc-card toc-card--teal" ><div class="toc-number">03</div><div class="toc-filename">extractor.py</div><div class="toc-desc">Now extracts 3 streams: audio, CLIP frames, high-res OCR frames.</div></a>
+      <a href="#chunker"       class="toc-card toc-card--teal" ><div class="toc-number">04</div><div class="toc-filename">chunker.py</div><div class="toc-desc">Dual frame index support. Assigns both CLIP and OCR frames to chunks.</div></a>
+      <a href="#ocr"           class="toc-card toc-card--teal" style="border-color:rgba(111,191,176,.35)"><div class="toc-number">05</div><div class="toc-filename">ocr_engine.py</div><div class="toc-desc">EasyOCR text extraction, confidence filtering, and cross-frame deduplication.</div></a>
+      <a href="#detector"      class="toc-card toc-card--rose" style="border-color:rgba(217,120,98,.35)"><div class="toc-number">06</div><div class="toc-filename">object_detector.py</div><div class="toc-desc">YOLOv8 object detection, spatial labelling, and scene description generation.</div></a>
+      <a href="#embedder"      class="toc-card toc-card--rose"><div class="toc-number">07</div><div class="toc-filename">embedder.py</div><div class="toc-desc">Now embeds enriched_text (ASR + OCR + DET) instead of transcript only.</div></a>
+      <a href="#vector-store"  class="toc-card toc-card--plum"><div class="toc-number">08</div><div class="toc-filename">vector_store.py</div><div class="toc-desc">Qdrant HNSW storage. Payload now includes OCR texts and detections.</div></a>
+      <a href="#snippet"       class="toc-card toc-card--plum"><div class="toc-number">09</div><div class="toc-filename">snippet_generator.py</div><div class="toc-desc">FFmpeg stream-copy snippet cutter.</div></a>
+      <a href="#server"        class="toc-card toc-card--plum"><div class="toc-number">10</div><div class="toc-filename">server.py</div><div class="toc-desc">FastAPI. Response model now surfaces OCR texts, detections, and scene description.</div></a>
+      <a href="#support"       class="toc-card toc-card--amber" style="grid-column:span 2"><div class="toc-number">11</div><div class="toc-filename">requirements.txt &nbsp;·&nbsp; Dockerfile &nbsp;·&nbsp; docker-compose.yml &nbsp;·&nbsp; App.jsx</div><div class="toc-desc">Two new dependencies (easyocr, ultralytics) and an updated frontend result cards.</div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ════ ARCHITECTURE FLOW ══════════════════════════════════════════════════ -->
+<section>
+  <div class="container container--narrow prose">
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Architecture</div>
+      <h2 class="h-section">How data <em>flows</em></h2>
+      <p class="section-deck">Ingest now has seven stages. The two new enrichment stages (OCR and DET) run concurrently, in batches, between chunking and embedding.</p>
+    </div>
+
+    <div class="flow-wrap">
+      <div class="flow-node"><div class="flow-box"><strong>Video file</strong>any codec<br>any length</div><div class="flow-lbl"></div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node"><div class="flow-box"><strong>extractor.py</strong>audio + CLIP<br>+ OCR frames</div><div class="flow-lbl">3 concurrent<br>FFmpeg procs</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node"><div class="flow-box"><strong>chunker.py</strong>Whisper ASR<br>dual frame idx</div><div class="flow-lbl">word timestamps</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node"><div class="flow-box"><strong>ocr_engine.py</strong>EasyOCR<br>text regions</div><div class="flow-lbl">1280px frames</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node"><div class="flow-box"><strong>object_detector.py</strong>YOLOv8s<br>scene desc</div><div class="flow-lbl">CLIP frames</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node"><div class="flow-box"><strong>embedder.py</strong>enriched_text<br>+ CLIP vision</div><div class="flow-lbl">1536-d fused</div></div>
+      <div class="flow-arr">→</div>
+      <div class="flow-node"><div class="flow-box"><strong>vector_store.py</strong>Qdrant HNSW<br>upsert</div><div class="flow-lbl">on-disk index</div></div>
+    </div>
+
+    <div class="callout callout--tip" style="margin-top:var(--space-4)">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">OCR and DET run concurrently</span>
+        In <code>pipeline._enrich_chunks()</code>, OCR and object detection run via
+        <code>asyncio.gather()</code> — they process different frame sets and have no
+        dependency on each other, so both GPU workloads proceed in parallel.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ 01 · config.py ════════════════════════════════════════════════════ -->
+<section id="config" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge"><span class="file-badge-dot"></span>backend/config.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 01 · Foundation</div>
+      <h2 class="h-section">Configuration — the <em>single source</em> of truth</h2>
+      <p class="section-deck">Every tunable parameter in the pipeline — including the new OCR confidence threshold, YOLO model size, and detection confidence floor — lives here. No module reads environment variables directly.</p>
+    </div>
+    <h3 class="h-sub">What it does</h3>
+    <p>A single Python <code>dataclass</code> with typed field declarations and production defaults. All five subsystems (ASR, OCR, DET, embedding, storage) share one config object — changing a value here changes behaviour everywhere without touching implementation code.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>config.py — all sections at a glance</span></div>
+<pre class="code-body"><span class="py-decorator">@dataclass</span>
+<span class="py-keyword">class</span> <span class="py-class">PipelineConfig</span>:
+    <span class="py-comment"># ── ASR ─────────────────────────────────────────────────────────</span>
+    whisper_model:   <span class="py-builtin">str</span>   = <span class="py-string">"large-v3"</span>    <span class="py-comment"># best accuracy at ~2x realtime on GPU</span>
+    whisper_device:  <span class="py-builtin">str</span>   = <span class="py-string">"cuda"</span>
+    whisper_compute: <span class="py-builtin">str</span>   = <span class="py-string">"float16"</span>
+
+    <span class="py-comment"># ── Chunking ────────────────────────────────────────────────────</span>
+    chunk_duration_secs: <span class="py-builtin">float</span> = <span class="py-number">30.0</span>
+    chunk_overlap_secs:  <span class="py-builtin">float</span> = <span class="py-number">5.0</span>
+    min_chunk_words:     <span class="py-builtin">int</span>   = <span class="py-number">10</span>
+
+    <span class="py-comment"># ── Frame sampling ──────────────────────────────────────────────</span>
+    frames_per_chunk: <span class="py-builtin">int</span> = <span class="py-number">4</span>    <span class="py-comment"># CLIP frames; OCR uses 2× this value</span>
+    frame_quality:    <span class="py-builtin">int</span> = <span class="py-number">85</span>   <span class="py-comment"># CLIP JPEG quality; OCR always uses q=2</span>
+
+    <span class="py-comment"># ── Embedding ───────────────────────────────────────────────────</span>
+    text_model:    <span class="py-builtin">str</span> = <span class="py-string">"text-embedding-3-large"</span>
+    clip_model:    <span class="py-builtin">str</span> = <span class="py-string">"ViT-L/14"</span>
+    embedding_dim: <span class="py-builtin">int</span> = <span class="py-number">1536</span>
+
+    <span class="py-comment"># ── Qdrant ──────────────────────────────────────────────────────</span>
+    qdrant_url:      <span class="py-builtin">str</span> = <span class="py-builtin">os</span>.getenv(<span class="py-string">"QDRANT_URL"</span>, <span class="py-string">"http://localhost:6333"</span>)
+    collection_name: <span class="py-builtin">str</span> = <span class="py-string">"video_chunks"</span></pre>
+    </div>
+    <div class="callout callout--note">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">OCR and DET thresholds are inside their engines</span>
+        The OCR confidence floor (<code>0.40</code>) and YOLO confidence floor (<code>0.45</code>) live as instance attributes on <code>OCREngine</code> and <code>ObjectDetector</code> rather than in <code>PipelineConfig</code>. This is intentional — these values rarely need changing per-deployment, unlike Whisper model size or chunk duration which commonly differ between dev and production environments.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 02 · pipeline.py ══════════════════════════════════════════════════ -->
+<section id="pipeline" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge"><span class="file-badge-dot"></span>backend/pipeline.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 02 · Orchestrator</div>
+      <h2 class="h-section">The pipeline — <em>coordinating</em> all signals</h2>
+      <p class="section-deck"><code>VideoChunk</code> gains four enrichment fields for the OCR and DET outputs, and <code>ingest()</code> adds two enrichment steps between chunking and embedding.</p>
+    </div>
+    <h3 class="h-sub">VideoChunk — four enrichment fields</h3>
+    <p>The dataclass now carries all three signal streams. The key addition is the <code>enriched_text</code> property which assembles them into the structured string that the embedding model receives.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>pipeline.py — VideoChunk</span></div>
+<pre class="code-body"><span class="py-decorator">@dataclass</span>
+<span class="py-keyword">class</span> <span class="py-class">VideoChunk</span>:
+    <span class="py-comment"># ── Existing fields ─────────────────────────────────────────────</span>
+    chunk_id:    <span class="py-builtin">str</span>
+    video_id:    <span class="py-builtin">str</span>
+    start_time:  <span class="py-builtin">float</span>
+    end_time:    <span class="py-builtin">float</span>
+    transcript:  <span class="py-builtin">str</span>             <span class="py-comment"># ASR — what was SAID</span>
+    frame_paths: <span class="py-builtin">list</span>[<span class="py-builtin">str</span>]       <span class="py-comment"># 336×336 JPEGs for CLIP + YOLO</span>
+
+    <span class="py-comment"># ── New module ───────────────────────────────────────────────────</span>
+    ocr_frame_paths:   <span class="py-builtin">list</span>[<span class="py-builtin">str</span>]  <span class="py-comment"># 1280px JPEGs for EasyOCR</span>
+    ocr_texts:         <span class="py-builtin">list</span>[<span class="py-builtin">str</span>]  <span class="py-comment"># OCR — what was SHOWN as text</span>
+    detected_objects:  <span class="py-builtin">list</span>[<span class="py-builtin">dict</span>] <span class="py-comment"># DET — objects with class + position</span>
+    scene_description: <span class="py-builtin">str</span>        <span class="py-comment"># DET — natural-language scene context</span>
+
+    embedding: <span class="py-class">Optional</span>[<span class="py-builtin">list</span>[<span class="py-builtin">float</span>]] = <span class="py-builtin">None</span>
+    metadata:  <span class="py-builtin">dict</span> = <span class="py-builtin">field</span>(default_factory=<span class="py-builtin">dict</span>)</pre>
+    </div>
+    <h3 class="h-sub">The enriched_text property — the fusion point</h3>
+    <p>This property is the linchpin of the enriched-text architecture. It assembles all three signals into a structured string with labelled sections. The section headers ("On-screen text:", "Scene shows:") are intentional — they help the embedding model contextualise each segment and prevent spoken words from being confused with on-screen text.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>pipeline.py — enriched_text property</span></div>
+<pre class="code-body"><span class="py-decorator">@property</span>
+<span class="py-keyword">def</span> <span class="py-fn">enriched_text</span>(<span class="py-self">self</span>) -> <span class="py-builtin">str</span>:
+    parts = [<span class="py-self">self</span>.transcript.<span class="py-fn">strip</span>()]       <span class="py-comment"># ASR transcript always first</span>
+
+    <span class="py-keyword">if</span> <span class="py-self">self</span>.ocr_texts:
+        ocr_joined = <span class="py-string">" | "</span>.<span class="py-fn">join</span>(<span class="py-self">self</span>.ocr_texts[:<span class="py-number">15</span>])  <span class="py-comment"># cap at 15 unique strings</span>
+        parts.<span class="py-fn">append</span>(<span class="py-string">f"On-screen text: {ocr_joined}"</span>)
+
+    <span class="py-keyword">if</span> <span class="py-self">self</span>.scene_description:
+        parts.<span class="py-fn">append</span>(<span class="py-self">self</span>.scene_description)      <span class="py-comment"># "Scene shows: person at center..."</span>
+
+    <span class="py-keyword">return</span> <span class="py-string">"\n"</span>.<span class="py-fn">join</span>(parts)</pre>
+    </div>
+    <h3 class="h-sub">The ingest() method — step by step</h3>
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div><div class="step-title">Generate video UUID</div><div class="step-body">Stable ID that groups all chunks for this video in Qdrant.</div></div></div>
+      <div class="step-item"><div class="step-num">2</div><div><div class="step-title">Concurrent FFmpeg extraction</div><div class="step-body">Three FFmpeg processes run simultaneously: 16kHz WAV + 336×336 CLIP frames + 1280px OCR frames.</div></div></div>
+      <div class="step-item"><div class="step-num">3</div><div><div class="step-title">Whisper ASR</div><div class="step-body">faster-whisper in thread-pool executor → word-level transcript segments.</div></div></div>
+      <div class="step-item"><div class="step-num">4</div><div><div class="step-title">Sliding-window chunking</div><div class="step-body">Dual frame index — assigns CLIP frames and OCR frames separately to each chunk window.</div></div></div>
+      <div class="step-item"><div class="step-num">5</div><div><div class="step-title">OCR enrichment</div><div class="step-body">EasyOCR reads each chunk's 1280px frames. Deduplicated text strings populate <code>chunk.ocr_texts</code>.</div></div></div>
+      <div class="step-item"><div class="step-num">6</div><div><div class="step-title">Object detection enrichment</div><div class="step-body">YOLOv8 runs on CLIP frames. Persistent objects + scene description populate <code>chunk.detected_objects</code> and <code>chunk.scene_description</code>. Steps 5 and 6 run concurrently via <code>asyncio.gather</code>.</div></div></div>
+      <div class="step-item"><div class="step-num">7</div><div><div class="step-title">Multimodal embedding</div><div class="step-body">Uses <code>chunk.enriched_text</code> (ASR + OCR + DET) instead of <code>chunk.transcript</code>. CLIP vision unchanged.</div></div></div>
+      <div class="step-item"><div class="step-num">8</div><div><div class="step-title">Qdrant upsert</div><div class="step-body">Full payload — including <code>ocr_texts</code>, <code>detected_objects</code>, <code>scene_description</code> — stored alongside the vector.</div></div></div>
+    </div>
+    <div class="callout callout--tip">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Enrichment runs in batches of 4 chunks</span>
+        <code>_enrich_chunks()</code> processes chunks in groups of 4 to avoid saturating GPU VRAM with simultaneous YOLO + EasyOCR + CLIP calls. Tune this batch size up on high-VRAM cards (16GB+).
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 03 · extractor.py ═════════════════════════════════════════════════ -->
+<section id="extractor" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--teal"><span class="file-badge-dot"></span>backend/extractor.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 03 · Extraction</div>
+      <h2 class="h-section">Three streams, <em>one pass</em></h2>
+      <p class="section-desc">A third concurrent FFmpeg process was added for high-resolution OCR frames. All three run via <code>asyncio.gather()</code> — no sequential waiting.</p>
+    </div>
+    <h3 class="h-sub">Why two different frame resolutions?</h3>
+    <p>CLIP ViT-L/14 was trained on 336×336 images — that resolution is optimal for visual embeddings and YOLO object detection (object silhouettes are clear at 336px). OCR is the opposite: a typical 24pt slide title is only ~8px tall at 336px, well below EasyOCR's reliable threshold. At 1280px that same title is ~40px tall — solidly readable. Maintaining two separate frame sets is a small storage cost for a large accuracy gain in text recognition.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>extractor.py — three concurrent processes</span></div>
+<pre class="code-body"><span class="py-keyword">await</span> <span class="py-builtin">asyncio</span>.<span class="py-fn">gather</span>(
+    <span class="py-self">self</span>.<span class="py-fn">_extract_audio</span>(video_path, audio_path),        <span class="py-comment"># 16kHz mono WAV</span>
+    <span class="py-self">self</span>.<span class="py-fn">_extract_clip_frames</span>(video_path, str(frames_dir)),   <span class="py-comment"># 336×336 for CLIP+YOLO</span>
+    <span class="py-self">self</span>.<span class="py-fn">_extract_ocr_frames</span>(video_path, str(ocr_frames_dir)), <span class="py-comment"># 1280px for EasyOCR</span>
+)
+<span class="py-comment"># Returns: (audio_path, clip_frame_index, ocr_frame_index)</span></pre>
+    </div>
+    <h3 class="h-sub">OCR frame extraction — key differences from CLIP frames</h3>
+    <table class="dtable">
+      <thead><tr><th>Setting</th><th>CLIP frames (336×336)</th><th>OCR frames (1280px)</th></tr></thead>
+      <tbody>
+        <tr><td>Scale</td><td>336×336 letterboxed</td><td>1280px wide, aspect-ratio preserved</td></tr>
+        <tr><td>JPEG quality</td><td>q≈3 (from config.frame_quality)</td><td>q=2 (high quality to preserve text strokes)</td></tr>
+        <tr><td>Scene filter</td><td>scene&gt;0.3 OR 1fps gate</td><td>Simple 1fps — steady coverage for OCR</td></tr>
+        <tr><td>Naming</td><td>frame_000042.jpg</td><td>ocrframe_000042.jpg</td></tr>
+        <tr><td>Used by</td><td>CLIP embedder + YOLOv8</td><td>EasyOCR only</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout--note">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Why no scene-change filter for OCR frames?</span>
+        The scene-change filter is valuable for CLIP frames because it captures visually novel moments. For OCR, what matters is capturing text that appears on screen — which often lasts only 2–5 seconds. A simple 1fps extraction guarantees no text will be missed between scene changes.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 04 · chunker.py ═══════════════════════════════════════════════════ -->
+<section id="chunker" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--teal"><span class="file-badge-dot"></span>backend/chunker.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 04 · ASR + Chunking</div>
+      <h2 class="h-section">Transcription and <em>dual-frame</em> windowing</h2>
+      <p class="section-desc">The sliding-window algorithm is unchanged. The update is mechanical: <code>chunk()</code> now receives and assigns two frame indexes instead of one.</p>
+    </div>
+    <h3 class="h-sub">The chunk() <em>signature</em></h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>chunker.py — dual frame index assignment</span></div>
+<pre class="code-body"><span class="py-keyword">def</span> <span class="py-fn">chunk</span>(<span class="py-self">self</span>, segments, video_id,
+          clip_frame_index: <span class="py-class">FrameIndex</span>,   <span class="py-comment"># 336×336 — for CLIP + YOLO</span>
+          ocr_frame_index:  <span class="py-class">FrameIndex</span>,   <span class="py-comment"># 1280px  — for EasyOCR (NEW)</span>
+          ) -> <span class="py-builtin">list</span>[<span class="py-class">VideoChunk</span>]:
+
+    <span class="py-comment"># For each window, assign both frame sets by timestamp intersection</span>
+    clip_frames = <span class="py-self">self</span>.<span class="py-fn">_frames_for_window</span>(
+        clip_frame_index, chunk_start, chunk_end,
+        max_frames=<span class="py-self">self</span>.cfg.frames_per_chunk          <span class="py-comment"># e.g. 4</span>
+    )
+    ocr_frames = <span class="py-self">self</span>.<span class="py-fn">_frames_for_window</span>(
+        ocr_frame_index, chunk_start, chunk_end,
+        max_frames=<span class="py-self">self</span>.cfg.frames_per_chunk * <span class="py-number">2</span>     <span class="py-comment"># 8 — OCR benefits from more coverage</span>
+    )
+
+    chunks.<span class="py-fn">append</span>(<span class="py-class">VideoChunk</span>(
+        ...,
+        frame_paths     = clip_frames,
+        ocr_frame_paths = ocr_frames,
+        ocr_texts        = [],   <span class="py-comment"># filled by OCREngine in pipeline._enrich_chunks()</span>
+        detected_objects = [],   <span class="py-comment"># filled by ObjectDetector</span>
+        scene_description= <span class="py-string">""</span>,  <span class="py-comment"># filled by ObjectDetector</span>
+    ))</pre>
+    </div>
+    <div class="callout callout--tip">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Why 2× frames for OCR?</span>
+        A lecture slide often appears on screen for 20–30 seconds but the content may subtly change (animations, step-by-step reveals). Using 8 frames per 30-second chunk (one every ~3.75s) vs 4 for CLIP means OCR has better coverage of incremental text changes on slides. CLIP, averaging frames for a holistic visual embedding, doesn't benefit from this extra density.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 05 · ocr_engine.py ════════════════════════════════════════════════ -->
+<section id="ocr" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--teal"><span class="file-badge-dot"></span>backend/ocr_engine.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 05 · OCR</div>
+      <h2 class="h-section">Reading the <em>visible text</em></h2>
+      <p class="section-deck">EasyOCR scans every high-resolution frame for text. What comes back is filtered for confidence, deduplicated across frames, and stored as a clean list of unique strings per chunk — ready to be embedded alongside the ASR transcript.</p>
+    </div>
+
+    <h3 class="h-sub">Why OCR matters for video search</h3>
+    <p>In a typical 60-minute lecture, a speaker might show 40 slides, each with its own title, bullet points, equations, and code snippets. Of these, perhaps 20% are ever read aloud verbatim. The other 80% are text that the viewer reads from the screen but that never enters the ASR transcript. Without OCR, a query like <em>"show me the slide about vanishing gradients"</em> can only match if those words were spoken. With OCR, it matches the slide text directly — regardless of whether the speaker said it.</p>
+
+    <h3 class="h-sub">The data structures</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>ocr_engine.py — TextRegion and FrameOCRResult</span></div>
+<pre class="code-body"><span class="py-decorator">@dataclass</span>
+<span class="py-keyword">class</span> <span class="py-class">TextRegion</span>:
+    text:       <span class="py-builtin">str</span>    <span class="py-comment"># Recognised string — word, phrase, or full line</span>
+    confidence: <span class="py-builtin">float</span>  <span class="py-comment"># EasyOCR confidence [0.0, 1.0]</span>
+    bbox:       <span class="py-builtin">list</span>   <span class="py-comment"># 4 corner points [[x1,y1],…,[x4,y4]] clockwise</span>
+    timestamp:  <span class="py-builtin">float</span>  <span class="py-comment"># Seconds from video start</span>
+
+    <span class="py-decorator">@property</span>
+    <span class="py-keyword">def</span> <span class="py-fn">area</span>(<span class="py-self">self</span>) -> <span class="py-builtin">float</span>:
+        <span class="py-comment"># Bounding box area — used to filter tiny noise detections</span>
+        xs = [p[<span class="py-number">0</span>] <span class="py-keyword">for</span> p <span class="py-keyword">in</span> <span class="py-self">self</span>.bbox]
+        ys = [p[<span class="py-number">1</span>] <span class="py-keyword">for</span> p <span class="py-keyword">in</span> <span class="py-self">self</span>.bbox]
+        <span class="py-keyword">return</span> (<span class="py-builtin">max</span>(xs) - <span class="py-builtin">min</span>(xs)) * (<span class="py-builtin">max</span>(ys) - <span class="py-builtin">min</span>(ys))
+
+<span class="py-decorator">@dataclass</span>
+<span class="py-keyword">class</span> <span class="py-class">FrameOCRResult</span>:
+    frame_path: <span class="py-builtin">str</span>
+    timestamp:  <span class="py-builtin">float</span>
+    regions:    <span class="py-builtin">list</span>[<span class="py-class">TextRegion</span>]
+
+    <span class="py-decorator">@property</span>
+    <span class="py-keyword">def</span> <span class="py-fn">text_lines</span>(<span class="py-self">self</span>) -> <span class="py-builtin">list</span>[<span class="py-builtin">str</span>]:
+        <span class="py-comment"># Sort regions top-to-bottom (by bbox centroid y-coordinate)</span>
+        sorted_regions = <span class="py-builtin">sorted</span>(<span class="py-self">self</span>.regions,
+                                  key=<span class="py-keyword">lambda</span> r: <span class="py-builtin">sum</span>(p[<span class="py-number">1</span>] <span class="py-keyword">for</span> p <span class="py-keyword">in</span> r.bbox) / <span class="py-number">4</span>)
+        <span class="py-keyword">return</span> [r.text <span class="py-keyword">for</span> r <span class="py-keyword">in</span> sorted_regions]</pre>
+    </div>
+
+    <h3 class="h-sub">EasyOCR inference — key parameters</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>ocr_engine.py — readtext() call</span></div>
+<pre class="code-body">img = np.<span class="py-fn">array</span>(<span class="py-class">Image</span>.<span class="py-fn">open</span>(path).<span class="py-fn">convert</span>(<span class="py-string">"RGB"</span>))  <span class="py-comment"># Pillow handles EXIF rotation</span>
+
+raw = reader.<span class="py-fn">readtext</span>(
+    img,
+    paragraph=<span class="py-builtin">False</span>,   <span class="py-comment"># detect individual lines, not merged blocks</span>
+)                    <span class="py-comment"># returns: [(bbox, text, confidence), ...]</span>
+
+<span class="py-keyword">for</span> bbox, text, conf <span class="py-keyword">in</span> raw:
+    <span class="py-keyword">if</span> conf &lt; <span class="py-self">self</span>.min_confidence:  <span class="py-comment"># default 0.40</span>
+        <span class="py-keyword">continue</span>
+    <span class="py-keyword">if</span> region.area &lt; <span class="py-self">self</span>.min_area:   <span class="py-comment"># default 200px² — filter micro-noise</span>
+        <span class="py-keyword">continue</span></pre>
+    </div>
+
+    <table class="dtable">
+      <thead><tr><th>Parameter</th><th>Value</th><th>Reasoning</th></tr></thead>
+      <tbody>
+        <tr><td>paragraph=False</td><td>False</td><td>Detects individual text lines rather than trying to merge nearby text into paragraph blocks. Better for mixed slide layouts with separate title, bullets, and code regions that EasyOCR might incorrectly merge.</td></tr>
+        <tr><td>min_confidence</td><td>0.40</td><td>Reject detections below 40% confidence. Slide text and code is typically 0.7+ confidence; noise and artefacts cluster below 0.4. Lowering this to 0.2 catches more faint text but dramatically increases noise strings in the embedding.</td></tr>
+        <tr><td>min_area</td><td>200px²</td><td>Filter bounding boxes smaller than ~14×14 pixels. Single stray characters and JPEG compression artefacts produce tiny bounding boxes that are almost never meaningful text.</td></tr>
+        <tr><td>lang_list</td><td>["en"]</td><td>English-only by default. EasyOCR supports 80+ languages — add ISO codes (e.g. "de", "fr") for multilingual content. More languages increase model init time by ~2s each.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="h-sub">Cross-frame deduplication — extract_chunk_texts()</h3>
+    <p>A 30-second chunk might contain 30 frames, each showing the same slide. Without deduplication, "Attention is All You Need" would appear 30 times in the embedding input. The deduplication pipeline removes this redundancy while preserving all genuinely unique text.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>ocr_engine.py — deduplication logic</span></div>
+<pre class="code-body"><span class="py-keyword">def</span> <span class="py-fn">extract_chunk_texts</span>(<span class="py-self">self</span>, frame_results) -> <span class="py-builtin">list</span>[<span class="py-builtin">str</span>]:
+    <span class="py-comment"># Step 1: Collect all meaningful text from all frames</span>
+    all_texts = [r.text <span class="py-keyword">for</span> fr <span class="py-keyword">in</span> frame_results
+                        <span class="py-keyword">for</span> r  <span class="py-keyword">in</span> fr.regions
+                        <span class="py-keyword">if</span>  <span class="py-self">self</span>.<span class="py-fn">_is_meaningful</span>(r.text)]
+
+    <span class="py-comment"># Step 2: Deduplicate exact matches (normalised to lowercase)</span>
+    seen = {}
+    <span class="py-keyword">for</span> t <span class="py-keyword">in</span> all_texts:
+        normalised = <span class="py-string">" "</span>.<span class="py-fn">join</span>(t.lower().<span class="py-fn">split</span>())
+        <span class="py-keyword">if</span> normalised <span class="py-keyword">not in</span> seen:
+            seen[normalised] = t
+
+    <span class="py-comment"># Step 3: Remove substrings  ("gradient" ⊂ "gradient descent" → keep only "gradient descent")</span>
+    filtered = [t <span class="py-keyword">for</span> t <span class="py-keyword">in</span> seen.values()
+                <span class="py-keyword">if not</span> <span class="py-builtin">any</span>(t.lower() != o.lower() <span class="py-keyword">and</span>
+                              t.lower() <span class="py-keyword">in</span>  o.lower()
+                              <span class="py-keyword">for</span> o <span class="py-keyword">in</span> seen.values())]
+
+    <span class="py-comment"># Step 4: Sort longest first (more content) and cap at 20</span>
+    filtered.<span class="py-fn">sort</span>(key=<span class="py-builtin">len</span>, reverse=<span class="py-builtin">True</span>)
+    <span class="py-keyword">return</span> filtered[:<span class="py-number">20</span>]</pre>
+    </div>
+
+    <div class="callout callout--tip">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Why sort longest first?</span>
+        When the embedding model receives a list of OCR strings, the most content-rich strings should appear near the top of the "On-screen text:" section — the model's attention naturally weights earlier tokens. A slide title like "Backpropagation Through Time" carries more retrieval signal than a fragment like "Fig. 3" and should rank higher in the embedding input.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 06 · object_detector.py ══════════════════════════════════════════ -->
+<section id="detector" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--rose"><span class="file-badge-dot"></span>backend/object_detector.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 06 · Object Detection</div>
+      <h2 class="h-section">Seeing what's <em>physically there</em></h2>
+      <p class="section-deck">YOLOv8 scans video frames for objects, computes their spatial positions, and distils the results into a natural-language sentence that describes the visual scene of each chunk.</p>
+    </div>
+
+    <h3 class="h-sub">Why object detection matters for retrieval</h3>
+    <p>ASR captures what is <em>said</em>. OCR captures what is <em>written on screen</em>. Neither captures what is <em>physically present</em> in the frame. A speaker demonstrating code on a laptop, a professor at a whiteboard, someone pointing at a diagram — these are visual events that have no ASR or OCR footprint, but they are exactly what a viewer means when they ask <em>"show me where someone is writing on the board"</em> or <em>"find the part with the laptop demo."</em></p>
+
+    <h3 class="h-sub">The data structures</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>object_detector.py — Detection and FrameDetection</span></div>
+<pre class="code-body"><span class="py-decorator">@dataclass</span>
+<span class="py-keyword">class</span> <span class="py-class">Detection</span>:
+    class_name: <span class="py-builtin">str</span>          <span class="py-comment"># COCO class label e.g. "laptop", "person"</span>
+    confidence: <span class="py-builtin">float</span>        <span class="py-comment"># YOLO confidence [0.0, 1.0]</span>
+    bbox_norm:  <span class="py-builtin">list</span>[<span class="py-builtin">float</span>]  <span class="py-comment"># [cx, cy, w, h] normalised to [0,1]</span>
+    position:   <span class="py-builtin">str</span>          <span class="py-comment"># spatial label: "top-left", "center", etc.</span>
+
+<span class="py-decorator">@dataclass</span>
+<span class="py-keyword">class</span> <span class="py-class">FrameDetection</span>:
+    frame_path: <span class="py-builtin">str</span>
+    timestamp:  <span class="py-builtin">float</span>
+    detections: <span class="py-builtin">list</span>[<span class="py-class">Detection</span>]
+
+    <span class="py-decorator">@property</span>
+    <span class="py-keyword">def</span> <span class="py-fn">summary</span>(<span class="py-self">self</span>) -> <span class="py-builtin">str</span>:
+        <span class="py-comment"># "person (left), laptop (center), whiteboard (right)"</span>
+        <span class="py-keyword">return</span> <span class="py-string">", "</span>.<span class="py-fn">join</span>(<span class="py-string">f"{d.class_name} ({d.position})"</span>
+                         <span class="py-keyword">for</span> d <span class="py-keyword">in</span> <span class="py-self">self</span>.detections)</pre>
+    </div>
+
+    <h3 class="h-sub">Spatial position labels — the 3×3 grid</h3>
+    <p>Each detection's normalised bounding box centroid is mapped to a human-readable spatial label using a 3×3 grid. This converts raw pixel coordinates into language that users naturally use in queries.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>object_detector.py — _position_label()</span></div>
+<pre class="code-body"><span class="py-keyword">def</span> <span class="py-fn">_position_label</span>(cx: <span class="py-builtin">float</span>, cy: <span class="py-builtin">float</span>) -> <span class="py-builtin">str</span>:
+    <span class="py-comment"># Horizontal zone: 0.0–0.33 = left, 0.33–0.67 = center, 0.67–1.0 = right</span>
+    h_zone = <span class="py-string">"left"</span>   <span class="py-keyword">if</span> cx &lt; <span class="py-number">0.33</span> <span class="py-keyword">else</span> <span class="py-string">"center"</span> <span class="py-keyword">if</span> cx &lt; <span class="py-number">0.67</span> <span class="py-keyword">else</span> <span class="py-string">"right"</span>
+    <span class="py-comment"># Vertical zone: 0.0–0.33 = top, 0.33–0.67 = middle, 0.67–1.0 = bottom</span>
+    v_zone = <span class="py-string">"top"</span>    <span class="py-keyword">if</span> cy &lt; <span class="py-number">0.33</span> <span class="py-keyword">else</span> <span class="py-string">""</span>      <span class="py-keyword">if</span> cy &lt; <span class="py-number">0.67</span> <span class="py-keyword">else</span> <span class="py-string">"bottom"</span>
+
+    <span class="py-comment"># Combine: "top-left", "center", "bottom-right", etc.</span>
+    <span class="py-keyword">if</span> v_zone <span class="py-keyword">and</span> h_zone != <span class="py-string">"center"</span>: <span class="py-keyword">return</span> <span class="py-string">f"{v_zone}-{h_zone}"</span>
+    <span class="py-keyword">elif</span> v_zone:                          <span class="py-keyword">return</span> v_zone
+    <span class="py-keyword">else</span>:                                 <span class="py-keyword">return</span> h_zone</pre>
+    </div>
+
+    <h3 class="h-sub">Persistent-object filtering — the 20% rule</h3>
+    <p>A single-frame detection of "cell phone" could be a genuine phone or a false positive on a shiny object. The persistence filter keeps only objects that appear in at least 20% of the chunk's frames. For a 10-frame chunk, an object must appear in at least 2 frames to be included — vastly reducing spurious detections while keeping consistently visible objects.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>object_detector.py — persistence filter in build_chunk_detections()</span></div>
+<pre class="code-body"><span class="py-comment"># Count how many frames each class appears in</span>
+class_frame_count: <span class="py-class">Counter</span> = <span class="py-class">Counter</span>()
+<span class="py-keyword">for</span> fd <span class="py-keyword">in</span> frame_detections:
+    <span class="py-keyword">for</span> cls <span class="py-keyword">in</span> {d.class_name <span class="py-keyword">for</span> d <span class="py-keyword">in</span> fd.detections}:
+        class_frame_count[cls] += <span class="py-number">1</span>
+
+<span class="py-comment"># Keep only classes present in ≥ 20% of frames</span>
+min_presence = <span class="py-builtin">max</span>(<span class="py-number">1</span>, <span class="py-builtin">int</span>(total_frames * <span class="py-number">0.20</span>))
+persistent = {cls <span class="py-keyword">for</span> cls, count <span class="py-keyword">in</span> class_frame_count.items()
+              <span class="py-keyword">if</span> count >= min_presence}</pre>
+    </div>
+
+    <h3 class="h-sub">Scene description generation</h3>
+    <p>The scene description turns the filtered detection set into a natural-language sentence. Objects are classified into four semantic roles — people, displays, writing surfaces, and tech — and assembled in a structured sentence. This role-based ordering ensures the most retrieval-relevant information (is there a person? is there a whiteboard?) appears early in the sentence.</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>object_detector.py — _describe_scene() output examples</span></div>
+<pre class="code-body"><span class="py-comment"># Example 1 — lecture with slides</span>
+<span class="py-string">"Scene shows: person presenting at center, monitor at right."</span>
+
+<span class="py-comment"># Example 2 — whiteboard session</span>
+<span class="py-string">"Scene shows: person visible at left, whiteboard at center."</span>
+
+<span class="py-comment"># Example 3 — laptop demo</span>
+<span class="py-string">"Scene shows: person presenting at center-left, laptop at right, keyboard at bottom-right."</span>
+
+<span class="py-comment"># Example 4 — slide-only screen recording</span>
+<span class="py-string">"Scene shows: monitor at center."</span></pre>
+    </div>
+
+    <div class="callout callout--warn">
+      <div class="callout-icon">!</div>
+      <div class="callout-body">
+        <span class="callout-title">COCO covers 80 common classes — not arbitrary objects</span>
+        YOLOv8 pre-trained on COCO can detect common objects like people, laptops, chairs, and whiteboards reliably. It cannot detect domain-specific objects like "laser pointer", "sticky note", or "specific brand of microscope." For open-vocabulary detection, replace the YOLO backbone with GroundingDINO or a CLIP-based zero-shot detector.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 07 · embedder.py ══════════════════════════════════════════════════ -->
+<section id="embedder" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--rose"><span class="file-badge-dot"></span>backend/embedder.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 07 · Embedding</div>
+      <h2 class="h-section">One vector, <em>three signals</em></h2>
+      <p class="section-deck">The change to the embedder is exactly one line — but it's the line that makes everything else matter. The switch from <code>chunk.transcript</code> to <code>chunk.enriched_text</code> is what makes OCR text and scene descriptions searchable.</p>
+    </div>
+    <h3 class="h-sub">The one-line change</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>embedder.py — before and after</span></div>
+<pre class="code-body"><span class="py-comment"># Before — transcript only</span>
+texts = [c.transcript <span class="py-keyword">for</span> c <span class="py-keyword">in</span> chunks]
+
+<span class="py-comment"># Now — enriched_text: transcript + OCR + scene description</span>
+texts = [c.enriched_text <span class="py-keyword">for</span> c <span class="py-keyword">in</span> chunks]</pre>
+    </div>
+    <p>Everything else in the embedder — the FusionProjection MLP, CLIP vision inference, <code>asyncio.gather()</code> concurrency, batch size, lazy model loading, zero-padded query embedding — is identical to v1. The change is purely in what text is sent to the OpenAI API.</p>
+    <h3 class="h-sub">Token length — does enriched_text exceed limits?</h3>
+    <p>OpenAI's <code>text-embedding-3-large</code> accepts up to 8,192 tokens per input. A typical 30-second chunk produces roughly: 120–200 words of transcript (~160 tokens) + 15 OCR strings (~80 tokens) + one scene sentence (~20 tokens) = ~260 tokens total. This is well within the 8,192 limit even for the densest content. The cap of 15 OCR strings in <code>enriched_text</code> is a safety guard against pathological cases (e.g. a frame densely packed with small text).</p>
+    <div class="callout callout--tip">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Query embedding is unchanged</span>
+        <code>embed_query()</code> still embeds text-only with zero-padded vision. The FusionProjection MLP was designed to handle this asymmetry — it learns during training that a zero vision component means "text-only query" and still produces embeddings that land near relevant enriched-text chunk vectors.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 08 · vector_store.py ══════════════════════════════════════════════ -->
+<section id="vector-store" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--plum"><span class="file-badge-dot"></span>backend/vector_store.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 08 · Storage</div>
+      <h2 class="h-section">The vector database — <em>richer payloads</em></h2>
+      <p class="section-desc">The Qdrant HNSW configuration is unchanged. The impact here is in the payload: each stored point now carries <code>ocr_texts</code>, <code>detected_objects</code>, and <code>scene_description</code> alongside the existing transcript and timecode fields.</p>
+    </div>
+    <h3 class="h-sub">The full payload stored per chunk</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>vector_store.py — richer payload in upsert()</span></div>
+<pre class="code-body">payload = {
+    <span class="py-comment"># ── Existing fields ──────────────────────────────────────────────</span>
+    <span class="py-string">"chunk_id"</span>:    c.chunk_id,
+    <span class="py-string">"video_id"</span>:    c.video_id,
+    <span class="py-string">"start_time"</span>:  c.start_time,
+    <span class="py-string">"end_time"</span>:    c.end_time,
+    <span class="py-string">"transcript"</span>:  c.transcript,
+    <span class="py-string">"frame_paths"</span>: c.frame_paths,
+    <span class="py-string">"video_path"</span>:  video_path,
+    <span class="py-comment"># ── New module ────────────────────────────────────────────────────</span>
+    <span class="py-string">"ocr_texts"</span>:         c.ocr_texts,         <span class="py-comment"># list of OCR strings</span>
+    <span class="py-string">"detected_objects"</span>:  c.detected_objects,  <span class="py-comment"># list of {class, conf, bbox, pos}</span>
+    <span class="py-string">"scene_description"</span>: c.scene_description, <span class="py-comment"># "Scene shows: person at center…"</span>
+}</pre>
+    </div>
+    <p>These extra payload fields are returned with every search result and forwarded to the API response, allowing the frontend to display slide text, detected objects, and the scene description alongside the transcript excerpt for each result card.</p>
+    <h3 class="h-sub">HNSW settings — unchanged and why</h3>
+    <p>The HNSW index configuration (<code>m=16</code>, <code>ef_construct=200</code>, <code>on_disk=True</code>) is identical to v1. The vectors themselves are the same dimension (1536) and the same distance metric (cosine). The only thing that changed is the quality and richness of the embeddings stored at each point — the index structure itself is agnostic to what went into producing each vector.</p>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 09 · snippet_generator.py ════════════════════════════════════════ -->
+<section id="snippet" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--plum"><span class="file-badge-dot"></span>backend/snippet_generator.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 09 · Retrieval</div>
+      <h2 class="h-section">Cutting video <em>snippets</em> in milliseconds</h2>
+      <p class="section-desc">Unchanged. The better search results produced by the three-signal embeddings automatically produce more relevant snippet cuts — no changes needed here.</p>
+    </div>
+    <p>The snippet generator cuts a playable MP4 clip for every search result using FFmpeg stream copy — no re-encode, sub-50ms regardless of source file length. Cuts are cached by an MD5 hash of <code>(video_path, start_time, duration)</code>, so repeated queries for the same moment return immediately from disk. The <code>-movflags +faststart</code> flag moves the MP4 metadata atom to the file start so browser players can begin streaming before the full download completes.</p>
+    <div class="callout callout--note">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Better queries → better cuts</span>
+        Because these embeddings now incorporate OCR text and scene descriptions, a query like "find the whiteboard formula" will retrieve a chunk that was genuinely near a whiteboard — and the snippet cut will show exactly that moment. The snippet generator doesn't know or care about the three signals; it just cuts whatever timestamps Qdrant returned. The quality improvement is upstream.
+      </div>
+    </div>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 10 · server.py ════════════════════════════════════════════════════ -->
+<section id="server" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge file-badge--plum"><span class="file-badge-dot"></span>backend/server.py</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 10 · API</div>
+      <h2 class="h-section">Surfacing all three signals <em>in the response</em></h2>
+      <p class="section-desc">The API logic is unchanged — three new fields were added to three new fields to the <code>ChunkResult</code> Pydantic model so the frontend receives OCR text, detected objects, and the scene description alongside the transcript in every query response.</p>
+    </div>
+    <h3 class="h-sub">The ChunkResult <em>response model</em></h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Python</span><span>server.py — ChunkResult</span></div>
+<pre class="code-body"><span class="py-keyword">class</span> <span class="py-class">ChunkResult</span>(<span class="py-class">BaseModel</span>):
+    <span class="py-comment"># ── Existing fields ──────────────────────────────────────────────</span>
+    chunk_id:    <span class="py-builtin">str</span>
+    video_id:    <span class="py-builtin">str</span>
+    start_time:  <span class="py-builtin">float</span>
+    end_time:    <span class="py-builtin">float</span>
+    timecode:    <span class="py-builtin">str</span>       <span class="py-comment"># "00:02:00 → 00:02:30"</span>
+    transcript:  <span class="py-builtin">str</span>       <span class="py-comment"># spoken content</span>
+    score:       <span class="py-builtin">float</span>     <span class="py-comment"># cosine similarity [0, 1]</span>
+    snippet_url: <span class="py-builtin">str</span>
+
+    <span class="py-comment"># ── New module ────────────────────────────────────────────────────</span>
+    ocr_texts:         <span class="py-builtin">list</span>[<span class="py-builtin">str</span>]  = []  <span class="py-comment"># visible text from frames</span>
+    detected_objects:  <span class="py-builtin">list</span>[<span class="py-builtin">dict</span>] = []  <span class="py-comment"># [{class, conf, bbox, pos}, ...]</span>
+    scene_description: <span class="py-builtin">str</span>        = <span class="py-string">""</span>  <span class="py-comment"># "Scene shows: person at center…"</span></pre>
+    </div>
+    <h3 class="h-sub">How the frontend uses the <em>signal fields</em></h3>
+    <p>The React frontend's result cards in <code>App.jsx</code> display the three signal streams as distinct visual sections in the expanded card view: the transcript as flowing prose, <code>ocr_texts</code> as a monospace chip row (showing each detected text string as a tag), and <code>scene_description</code> as a small italic paragraph beneath the video player. This gives users immediate visual context for <em>why</em> a result was returned.</p>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ 11 · Infrastructure ═══════════════════════════════════════════════ -->
+<section id="support" class="file-section">
+  <div class="container container--narrow prose">
+    <span class="file-badge"><span class="file-badge-dot"></span>Infrastructure &amp; Frontend</span>
+    <div class="section-header">
+      <div class="eyebrow eyebrow--section">Module 11 · Infrastructure</div>
+      <h2 class="h-section">Dependencies, containers, <em>and the UI</em></h2>
+    </div>
+    <h3 class="h-sub">requirements.txt</h3>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Text</span><span>backend/requirements.txt</span></div>
+<pre class="code-body"><span class="py-comment"># ─────────────────────────────────────────────────────────────────</span>
+<span class="py-comment"># VideoRAG — Backend Python dependencies</span>
+<span class="py-comment">#</span>
+<span class="py-comment"># Install: pip install -r requirements.txt</span>
+<span class="py-comment">#</span>
+<span class="py-comment"># GPU (CUDA 12.x): replace torch line with:</span>
+<span class="py-comment">#   torch==2.3.1+cu121 --index-url https://download.pytorch.org/whl/cu121</span>
+<span class="py-comment"># ─────────────────────────────────────────────────────────────────</span>
+
+<span class="py-comment"># ── Web server ────────────────────────────────────────────────────</span>
+fastapi==<span class="py-number">0.111.1</span>
+uvicorn[standard]==<span class="py-number">0.30.1</span>
+python-multipart==<span class="py-number">0.0.9</span>
+aiofiles==<span class="py-number">23.2.1</span>
+
+<span class="py-comment"># ── ASR — faster-whisper (CTranslate2, 4-8x faster than openai-whisper)</span>
+faster-whisper==<span class="py-number">1.0.3</span>
+
+<span class="py-comment"># ── OCR — EasyOCR (GPU-accelerated, 80+ languages) ────────────────</span>
+<span class="py-comment"># Extracts visible text from video frames</span>
+easyocr==<span class="py-number">1.7.1</span>
+
+<span class="py-comment"># ── Object Detection — YOLOv8 (ultralytics) ───────────────────────</span>
+<span class="py-comment"># Detects objects and generates scene descriptions</span>
+<span class="py-comment"># Downloads yolov8s.pt (~22MB) automatically on first use</span>
+ultralytics==<span class="py-number">8.2.24</span>
+
+<span class="py-comment"># ── Vision — OpenCLIP ─────────────────────────────────────────────</span>
+open-clip-torch==<span class="py-number">2.24.0</span>
+Pillow==<span class="py-number">10.3.0</span>
+torchvision==<span class="py-number">0.18.1</span>
+
+<span class="py-comment"># ── Deep learning runtime (CPU-only — swap for CUDA build above) ──</span>
+torch==<span class="py-number">2.3.1</span>
+
+<span class="py-comment"># ── Text embeddings ───────────────────────────────────────────────</span>
+openai==<span class="py-number">1.35.3</span>
+
+<span class="py-comment"># ── Vector database ───────────────────────────────────────────────</span>
+qdrant-client[async]==<span class="py-number">1.9.2</span>
+
+<span class="py-comment"># ── Utilities ─────────────────────────────────────────────────────</span>
+numpy==<span class="py-number">1.26.4</span>
+pyyaml==<span class="py-number">6.0.1</span>
+python-dotenv==<span class="py-number">1.0.1</span>
+
+<span class="py-comment"># ── Optional: YouTube ingestion ───────────────────────────────────</span>
+<span class="py-comment"># yt-dlp==2024.5.27</span></pre>
+    </div>
+    <table class="dtable">
+      <thead><tr><th>Package</th><th>Size</th><th>First-use download</th></tr></thead>
+      <tbody>
+        <tr><td>easyocr</td><td>~4MB pip</td><td>~200MB model weights (CRAFT + recognition model) on first Reader() init</td></tr>
+        <tr><td>ultralytics</td><td>~6MB pip</td><td>~22MB yolov8s.pt on first YOLO("yolov8s.pt") call</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout--tip">
+      <div class="callout-icon">i</div>
+      <div class="callout-body">
+        <span class="callout-title">Pre-download in Dockerfile</span>
+        The Dockerfile pre-downloads Whisper at build time. Do the same for EasyOCR and YOLO to avoid cold-start delays on the first ingest: add <code>RUN python3 -c "import easyocr; easyocr.Reader(['en'])"</code> and <code>RUN python3 -c "from ultralytics import YOLO; YOLO('yolov8s.pt')"</code> to the Dockerfile.
+      </div>
+    </div>
+    <h3 class="h-sub">App.jsx — updated result cards</h3>
+    <p>The frontend result cards now display all three signal streams in the expanded view. When a user clicks a result card, they see: the video snippet playing at the correct timestamp, the full ASR transcript, a monospace chip row of OCR text strings found on screen, and the scene description below the player. This gives users complete context for why the retrieval system surfaced that particular moment.</p>
+    <a href="#toc" class="back-to-toc">↑ Back to table of contents</a>
+  </div>
+</section>
+
+<!-- ════ SUMMARY CARD ══════════════════════════════════════════════════════ -->
+<section>
+  <div class="container container--narrow">
+    <div class="card card--glow" style="text-align:center;padding:52px 40px">
+      <div class="eyebrow" style="justify-content:center;margin-bottom:var(--space-3)">End of walkthrough &middot; VideoRAG</div>
+      <h2 class="h-section" style="margin-bottom:18px">The complete <em>picture</em></h2>
+      <p style="color:var(--ink-soft);max-width:580px;margin:0 auto 16px;line-height:1.7;font-size:16px">
+        Ten Python modules — two new, six updated, two unchanged. Three signal streams —
+        speech, text, objects — fused into a single searchable 1536-dimensional vector per chunk.
+      </p>
+      <p style="color:var(--ink-muted);max-width:560px;margin:0 auto 36px;font-size:14px;font-family:var(--font-mono)">
+        ASR &nbsp;·&nbsp; faster-whisper large-v3 &nbsp;&nbsp;
+        OCR &nbsp;·&nbsp; EasyOCR &nbsp;&nbsp;
+        DET &nbsp;·&nbsp; YOLOv8s &nbsp;&nbsp;
+        VEC &nbsp;·&nbsp; Qdrant HNSW
+      </p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn btn--primary" href="https://github.com/yourname/video-rag">View on GitHub</a>
+        <a class="btn btn--secondary" href="#toc">Back to index</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:40px;margin-bottom:40px">
+      <div>
+        <h5>Foundation</h5>
+        <ul>
+          <li><a href="#config">config.py</a></li>
+          <li><a href="#pipeline">pipeline.py</a></li>
+          <li><a href="#extractor">extractor.py</a></li>
+          <li><a href="#chunker">chunker.py</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Three signals</h5>
+        <ul>
+          <li><a href="#summary">ASR · faster-whisper</a></li>
+          <li><a href="#ocr">OCR · ocr_engine.py</a></li>
+          <li><a href="#detector">DET · object_detector.py</a></li>
+          <li><a href="#embedder">embedder.py</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Storage &amp; API</h5>
+        <ul>
+          <li><a href="#vector-store">vector_store.py</a></li>
+          <li><a href="#snippet">snippet_generator.py</a></li>
+          <li><a href="#server">server.py</a></li>
+          <li><a href="#support">Infrastructure</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Contact</h5>
+        <ul>
+          <li><a href="mailto:MaricarShaik@gmail.com">Email</a></li>
+          <li><a href="https://linkedin.com/in/shaikmaricar" target="_blank" rel="noopener">LinkedIn</a></li>
+          <li><a href="https://twitter.com/ShaikMaricar" target="_blank" rel="noopener">Twitter</a></li>
+          <li><a href="https://www.shaikmaricar.com">shaikmaricar.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; Shaik Maricar &middot; Principal Data &amp; AI Architect</span>
+      <span>VideoRAG Technical Reference · ASR · OCR · DET</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); }
+    }),
+    { threshold: 0.05, rootMargin: "0px 0px -40px 0px" }
+  );
+  document.querySelectorAll("section").forEach(el => {
+    el.classList.add("reveal"); obs.observe(el);
+  });
+</script>
+</body>
+</html>
