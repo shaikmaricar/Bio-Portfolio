@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neo4j APOC Procedures: The Definitive Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Source+Sans+3:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#09090f; --surface:#111118; --surface2:#18181f; --border:#1e1e2a;
+  --border2:#2c2c3a; --text:#e8e6e3; --text2:#9a9ab0; --text3:#55556a;
+  --gold:#c9a84c; --gold-d:rgba(201,168,76,.12); --gold-b:rgba(201,168,76,.28);
+  --cyan:#38bdf8; --cyan-d:rgba(56,189,248,.10); --cyan-b:rgba(56,189,248,.28);
+  --green:#4ade80; --green-d:rgba(74,222,128,.10); --purple:#a78bfa;
+  --purple-d:rgba(167,139,250,.10); --amber:#fbbf24; --red:#f87171;
+  --teal:#2dd4bf; --orange:#fb923c; --pink:#f472b6; --lime:#a3e635;
+  --blue:#60a5fa; --violet:#c084fc; --rose:#f43f5e; --yellow:#facc15;
+  --code-bg:#060609;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:16px;line-height:1.75}
+
+/* ── Layout ── */
+.page{max-width:1200px;margin:0 auto;padding:0 24px}
+.article-grid{display:grid;grid-template-columns:230px 1fr;gap:52px;padding:52px 0;align-items:start}
+@media(max-width:900px){.article-grid{grid-template-columns:1fr}.toc-wrap{display:none}}
+
+/* ── Hero ── */
+.hero{padding:80px 0 64px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--border)}
+.hero::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(201,168,76,.07) 0%,transparent 68%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 16px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;background:var(--gold-d);color:var(--gold);border:1px solid var(--gold-b);margin-bottom:24px}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(34px,6vw,62px);font-weight:900;line-height:1.08;margin-bottom:22px}
+.hero h1 em{color:var(--gold);font-style:normal}
+.hero-sub{font-size:17px;color:var(--text2);max-width:580px;margin:0 auto 32px;line-height:1.65}
+.meta{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;color:var(--text3);font-size:13px}
+.meta-dot{width:4px;height:4px;border-radius:50%;background:var(--border2)}
+
+/* ── TOC ── */
+.toc-wrap{position:sticky;top:24px}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;font-size:12.5px}
+.toc-hd{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.toc a{display:block;padding:4px 0;color:var(--text2);text-decoration:none;border-radius:3px;line-height:1.4;transition:color .15s}
+.toc a:hover{color:var(--gold)}
+.toc a.sub{padding-left:14px;font-size:11.5px;color:var(--text3);border-left:2px solid var(--border);margin:1px 0}
+.toc a.sub:hover{color:var(--cyan);border-left-color:var(--cyan)}
+
+/* ── Article ── */
+.art{min-width:0}
+.section{margin-bottom:64px}
+.s-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+h2{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;line-height:1.2;margin-bottom:18px}
+h3{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin:28px 0 10px}
+p{color:var(--text2);margin-bottom:16px;font-size:15.5px;line-height:1.82}
+p strong{color:var(--text)}
+ul,ol{padding-left:20px;margin-bottom:16px;color:var(--text2);font-size:15px;line-height:1.8}
+li{margin-bottom:5px}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--amber);text-decoration:underline}
+code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--surface2);padding:2px 7px;border-radius:3px;color:var(--cyan);border:1px solid var(--border)}
+hr{border:none;border-top:1px solid var(--border);margin:52px 0}
+
+/* ── Info boxes ── */
+.info{display:flex;gap:14px;border-radius:8px;padding:16px 20px;margin-bottom:22px;font-size:14px;line-height:1.75}
+.info-ico{font-size:20px;flex-shrink:0;margin-top:2px}
+.info-body strong{display:block;font-size:13px;margin-bottom:3px;color:var(--text)}
+.info-body{color:var(--text2)}
+
+/* ── Category sections ── */
+.cat{margin-bottom:72px;padding-bottom:72px;border-bottom:1px solid var(--border)}
+.cat:last-of-type{border-bottom:none}
+.cat-hdr{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.cat-ico{width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;margin-top:2px}
+.cat-meta{flex:1}
+.cat-num{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.cat-title{font-family:'Playfair Display',serif;font-size:25px;font-weight:700;line-height:1.15;margin-bottom:3px}
+.cat-prefix{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3)}
+.cat-desc{color:var(--text2);font-size:15px;line-height:1.82;margin-bottom:20px}
+.tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px}
+.tag{padding:4px 12px;border-radius:20px;font-size:11.5px;font-weight:600}
+
+/* ── Procedure table ── */
+.pt-wrap{overflow-x:auto;margin-bottom:24px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;padding:10px 14px;background:var(--surface2);border-bottom:2px solid var(--border2);font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55}
+tr:hover td{background:var(--surface2)}
+.pn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;white-space:nowrap}
+.pd{color:var(--text2);font-size:13px}
+.pw{color:var(--text3);font-size:12px;font-style:italic}
+
+/* ── Code blocks ── */
+.cb{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:20px 20px 20px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;overflow-x:auto;margin-bottom:22px;position:relative}
+.cb-lbl{position:absolute;top:10px;right:14px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.kw{color:#ff7b72}.fn{color:#79c0ff}.str{color:#a5d6ff}.num{color:#f2cc60}.cm{color:#6a737d}.br{color:#e3b341}.kw2{color:#ffa657}.pn2{color:#d2a8ff}
+
+/* ── References ── */
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:24px 0 32px}
+.ref-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 20px;text-decoration:none;display:block;transition:border-color .2s,background .2s;cursor:pointer}
+.ref-card:hover{border-color:var(--gold);background:var(--gold-d)}
+.rc-label{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.rc-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.rc-desc{font-size:12px;color:var(--text3);line-height:1.5}
+
+/* ── Project CTA ── */
+.project-cta{background:linear-gradient(135deg,#0b1828 0%,#080812 100%);border:1px solid rgba(56,189,248,.28);border-radius:14px;padding:48px 40px;text-align:center;position:relative;overflow:hidden;margin-top:64px}
+.project-cta::before{content:'';position:absolute;top:-80px;right:-80px;width:240px;height:240px;background:radial-gradient(circle,rgba(56,189,248,.08) 0%,transparent 70%);pointer-events:none}
+.project-cta::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(167,139,250,.07) 0%,transparent 70%);pointer-events:none}
+.cta-badge{display:inline-block;padding:4px 14px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--cyan-d);color:var(--cyan);border:1px solid var(--cyan-b);margin-bottom:18px;font-family:'JetBrains Mono',monospace}
+.cta-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:14px}
+.cta-desc{color:var(--text2);font-size:14.5px;max-width:500px;margin:0 auto 24px;line-height:1.72}
+.cta-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+.cta-pill{padding:4px 14px;border-radius:20px;font-size:11.5px;font-weight:600}
+.cta-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 34px;border-radius:8px;background:var(--cyan);color:#07090f;font-weight:700;font-size:15px;cursor:pointer;border:none;font-family:'Source Sans 3',sans-serif;transition:all .2s;position:relative;z-index:1}
+.cta-btn:hover{background:#7dd3fc;transform:translateY(-2px);box-shadow:0 10px 28px rgba(56,189,248,.28)}
+.cta-note{margin-top:16px;font-size:12px;color:var(--text3)}
+
+/* ── Footer ── */
+.footer{border-top:1px solid var(--border);padding:36px 0;text-align:center;color:var(--text3);font-size:13px;line-height:1.8;margin-top:64px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ HERO ═══ -->
+<div class="page">
+<section class="hero">
+  <div class="hero-badge">📖 Complete Developer Reference &nbsp;·&nbsp; May 2026</div>
+  <h1>Neo4j <em>APOC</em> Procedures<br>— The Definitive Guide</h1>
+  <p class="hero-sub">A comprehensive walkthrough of 450+ battle-tested procedures and functions that unlock the full power of your graph database — from data import to GraphRAG.</p>
+  <div class="meta">
+    <span>⏱ 25 min read</span><span class="meta-dot"></span>
+    <span>📦 APOC Core 2026</span><span class="meta-dot"></span>
+    <span>🔧 Neo4j 5.x</span><span class="meta-dot"></span>
+    <span>🌐 14 Categories Covered</span>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ TWO-COL ═══ -->
+<div class="article-grid">
+
+<!-- ── TOC ── -->
+<aside class="toc-wrap">
+<nav class="toc">
+  <div class="toc-hd">Contents</div>
+  <a href="#intro">What is APOC?</a>
+  <a href="#core-vs-extended">Core vs Extended</a>
+  <a href="#installation">Installation</a>
+  <a href="#categories">The 14 Categories</a>
+  <a href="#cat1"  class="sub">1 · Import</a>
+  <a href="#cat2"  class="sub">2 · Export</a>
+  <a href="#cat3"  class="sub">3 · Graph Refactoring</a>
+  <a href="#cat4"  class="sub">4 · Graph Updates</a>
+  <a href="#cat5"  class="sub">5 · Path Finding</a>
+  <a href="#cat6"  class="sub">6 · Cypher Execution</a>
+  <a href="#cat7"  class="sub">7 · Data Structures</a>
+  <a href="#cat8"  class="sub">8 · Temporal / Date-Time</a>
+  <a href="#cat9"  class="sub">9 · Mathematical</a>
+  <a href="#cat10" class="sub">10 · Virtual Nodes &amp; Rels</a>
+  <a href="#cat11" class="sub">11 · Background Operations</a>
+  <a href="#cat12" class="sub">12 · DB Introspection</a>
+  <a href="#cat13" class="sub">13 · Utilities</a>
+  <a href="#cat14" class="sub">14 · Triggers</a>
+  <a href="#references">Reference Links</a>
+  <a href="#project">Sample Project</a>
+</nav>
+</aside>
+
+<!-- ── ARTICLE ── -->
+<article class="art">
+
+<!-- ─── INTRO ─── -->
+<section class="section" id="intro">
+  <div class="s-label">Introduction</div>
+  <h2>What is APOC?</h2>
+  <p><strong>APOC</strong> — short for <em>Awesome Procedures on Cypher</em> — is the most widely-used extension library for the Neo4j graph database. Originally standing for <em>"A Package Of Components"</em> when it was first bundled with Neo4j back in 2009, APOC has grown into a comprehensive toolkit of <strong>450+ procedures and functions</strong> that dramatically extend what is possible with plain Cypher queries.</p>
+  <p>At its core, APOC fills the gaps between what the Cypher query language can express natively and what real-world production workloads demand. Need to load data from a REST API in a single Cypher statement? Perform bulk graph refactoring across millions of nodes without writing Java? Run periodic background jobs, integrate with relational databases, or generate and store vector embeddings directly in Neo4j? APOC has a procedure for all of it.</p>
+  <p>APOC procedures are written in Java, deployed as a plugin JAR, and called from Cypher using the familiar <code>CALL apoc.namespace.procedureName(args)</code> syntax. Functions — a subset of APOC — can be embedded directly in expressions and predicates just like built-in Cypher functions such as <code>toLower()</code> or <code>size()</code>.</p>
+  <div class="info" style="background:var(--gold-d);border:1px solid var(--gold-b)">
+    <div class="info-ico">💡</div>
+    <div class="info-body">
+      <strong>Etymology Trivia</strong>
+      "Apoc" was also the name of the technician and driver aboard the Nebuchadnezzar in the Matrix — he was killed by Cypher. The Neo4j community loved the pun: APOC fills in everything that Cypher cannot do alone.
+    </div>
+  </div>
+</section>
+
+<!-- ─── CORE VS EXTENDED ─── -->
+<section class="section" id="core-vs-extended">
+  <div class="s-label">Architecture</div>
+  <h2>APOC Core vs. APOC Extended</h2>
+  <p>As of Neo4j 5.0, APOC was split into two separate modules to improve stability, security, and availability on managed cloud services:</p>
+  <h3>APOC Core</h3>
+  <p>The <strong>officially supported</strong> module maintained by Neo4j. It contains <strong>450+ procedures and functions</strong> covering data import/export, graph refactoring, Cypher execution, data structures, temporal utilities, virtual graphs, and more. APOC Core is available on Neo4j AuraDB, Neo4j Sandbox, Docker, and Neo4j Desktop with a single click.</p>
+  <h3>APOC Extended</h3>
+  <p>A <strong>community-maintained</strong> module with ~50 additional procedures that have external dependencies (e.g. MongoDB, ElasticSearch, Couchbase connectors), experimental features, or NLP integrations. APOC Extended is not available on managed cloud services like Aura — it requires a self-hosted Neo4j instance. Procedures are called with the same <code>apoc.*</code> prefix.</p>
+  <div class="info" style="background:var(--cyan-d);border:1px solid var(--cyan-b)">
+    <div class="info-ico">🔒</div>
+    <div class="info-body">
+      <strong>Security Note</strong>
+      Some APOC procedures — particularly those that read files from disk, open network connections, or run arbitrary Cypher — are <em>restricted</em> by default. They must be explicitly enabled in <code>neo4j.conf</code> (e.g. <code>apoc.import.file.enabled=true</code>) before they can be called.
+    </div>
+  </div>
+</section>
+
+<!-- ─── INSTALLATION ─── -->
+<section class="section" id="installation">
+  <div class="s-label">Setup</div>
+  <h2>Installation &amp; Configuration</h2>
+  <p>APOC Core can be installed in four ways, depending on your environment:</p>
+  <h3>Neo4j Desktop (Recommended for Development)</h3>
+  <p>Open your database → click <strong>Manage</strong> → go to the <strong>Plugins</strong> tab → click <strong>Install</strong> next to APOC. Restart the database. No configuration required.</p>
+  <h3>Docker</h3>
+  <div class="cb"><span class="cm"># Pass the NEO4J_PLUGINS environment variable — Neo4j will</span>
+<span class="cm"># automatically download and configure APOC at container startup.</span>
+<span class="kw">docker run</span> -p 7474:7474 -p 7687:7687 \
+  -e <span class="str">NEO4J_PLUGINS='["apoc"]'</span> \
+  -e <span class="str">NEO4J_apoc_export_file_enabled=true</span> \
+  -e <span class="str">NEO4J_apoc_import_file_enabled=true</span> \
+  -e <span class="str">NEO4J_apoc_import_file_use__neo4j__config=true</span> \
+  neo4j:latest</div>
+  <h3>Self-Hosted / Manual</h3>
+  <p>Download the <code>apoc-&lt;version&gt;-core.jar</code> from the <a href="https://github.com/neo4j/apoc/releases" target="_blank">GitHub releases page</a> (version must match your Neo4j major.minor version), place it in <code>$NEO4J_HOME/plugins/</code>, and restart Neo4j.</p>
+  <h3>AuraDB</h3>
+  <p>APOC Core is available by default in all Neo4j Aura instances. No installation is needed — just start calling <code>apoc.*</code> procedures. Some restricted procedures are not available on Aura for security reasons.</p>
+  <h3>Verify Installation</h3>
+  <div class="cb"><span class="cm">// Verify APOC is loaded and check your version</span>
+<span class="kw">RETURN</span> <span class="fn">apoc.version</span>() <span class="kw">AS</span> apocVersion;
+
+<span class="cm">// List all available APOC procedures</span>
+<span class="kw">CALL</span> <span class="fn">apoc.help</span>(<span class="str">'apoc'</span>) <span class="kw">YIELD</span> name, description, signature
+<span class="kw">RETURN</span> name, description <span class="kw">LIMIT</span> <span class="num">20</span>;
+
+<span class="cm">// Search for procedures in a specific namespace</span>
+<span class="kw">CALL</span> <span class="fn">apoc.help</span>(<span class="str">'apoc.load'</span>) <span class="kw">YIELD</span> name, description
+<span class="kw">RETURN</span> name, description;</div>
+</section>
+
+<!-- ═══════════════════════════════ CATEGORIES ═══ -->
+<hr id="categories">
+<div class="s-label" style="margin-bottom:14px">The 14 Most Popular &amp; Frequently Used Categories</div>
+<h2 style="margin-bottom:40px">APOC Procedure Categories</h2>
+
+<!-- ───────────────────────────── CAT 1: IMPORT ─── -->
+<div class="cat" id="cat1">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25)">📥</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--cyan)">Category 01</div>
+      <div class="cat-title">Import</div>
+      <div class="cat-prefix">apoc.load.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">The Import category is one of the most heavily used in practice. It enables Neo4j to <strong>consume external data sources directly inside Cypher queries</strong> — without any application code acting as an intermediary. You can stream JSON from REST APIs, ingest CSV exports from spreadsheets or data warehouses, parse XML feeds, query relational databases via JDBC, and even walk local file directories. Combined with <code>apoc.periodic.iterate</code>, Import procedures become the backbone of production ETL pipelines capable of loading tens of millions of records efficiently.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(56,189,248,.12);color:var(--cyan)">ETL Pipelines</span>
+    <span class="tag" style="background:rgba(56,189,248,.12);color:var(--cyan)">REST API Integration</span>
+    <span class="tag" style="background:rgba(56,189,248,.12);color:var(--cyan)">CSV Ingestion</span>
+    <span class="tag" style="background:rgba(56,189,248,.12);color:var(--cyan)">JDBC / RDBMS Migration</span>
+    <span class="tag" style="background:rgba(56,189,248,.12);color:var(--cyan)">XML Parsing</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.json</td><td class="pd">Streams a JSON document from a URL or local file path. Yields each top-level element as a <code>value</code> map. Supports HTTP headers and query params.</td><td class="pw">Loading product catalogs, API responses, or JSONL files into the graph</td></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.jsonArray</td><td class="pd">Loads a JSON array and yields each element individually, ideal when the root of the document is an array rather than an object.</td><td class="pw">Batch-processing arrays of records from JSON exports</td></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.csv</td><td class="pd">Streams a CSV file row by row. Supports custom delimiters, quote characters, null values, and automatic type coercion for each column.</td><td class="pw">Importing spreadsheet exports, data warehouse dumps, or CRM data</td></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.xml</td><td class="pd">Parses an XML document into a nested map structure. Handles attributes, namespaces, and CDATA sections. Yields the root element as a traversable map.</td><td class="pw">Ingesting XML data feeds, SOAP responses, or configuration files</td></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.jdbc</td><td class="pd">Executes a SQL query against any JDBC-compliant database (PostgreSQL, MySQL, Oracle, SQL Server) and streams the result set into Cypher.</td><td class="pw">Migrating relational data to Neo4j or enriching graph nodes with RDBMS data</td></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.jsonParams</td><td class="pd">Like <code>apoc.load.json</code> but accepts custom HTTP method, headers, and a payload body — enabling POST requests to authenticated REST APIs.</td><td class="pw">Calling authenticated APIs with bearer tokens or API keys</td></tr>
+    <tr><td class="pn" style="color:var(--cyan)">apoc.load.directory</td><td class="pd">Lists files in a Neo4j import directory matching a glob pattern. Returns file name, path, size, and last-modified timestamp.</td><td class="pw">Building directory-based file ingestion loops; discovering available import files</td></tr>
+  </table></div>
+  <p><strong>Example — Load from a paginated JSON API:</strong></p>
+  <div class="cb"><span class="cm">// Stream a JSON file from a URL and create nodes for each record.</span>
+<span class="cm">// apoc.load.json yields one `value` map per top-level object.</span>
+<span class="kw">WITH</span> <span class="str">'https://api.example.com/products.json'</span> <span class="kw">AS</span> url
+<span class="kw">CALL</span> <span class="fn">apoc.load.json</span>(url) <span class="kw">YIELD</span> value <span class="kw">AS</span> row
+<span class="kw">MERGE</span> (p:Product <span class="br">{</span>sku: row.sku<span class="br">}</span>)
+<span class="kw">ON CREATE SET</span> p.name  = row.name,
+              p.price = <span class="fn">toFloat</span>(row.price),
+              p.brand = row.brand
+<span class="kw">RETURN</span> <span class="fn">count</span>(p) <span class="kw">AS</span> productsLoaded;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 2: EXPORT ─── -->
+<div class="cat" id="cat2">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(74,222,128,.10);border:1px solid rgba(74,222,128,.22)">📤</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--green)">Category 02</div>
+      <div class="cat-title">Export</div>
+      <div class="cat-prefix">apoc.export.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">The Export category provides a <strong>snapshot and serialisation capability</strong> for your graph data. You can export the entire graph, a specific subgraph defined by a query, or a set of nodes and relationships to formats including JSON, CSV, GraphML, Cypher scripts, and Gephi-compatible files. These exports serve as backups, graph migration artifacts, ML training datasets, or embedding pipelines. The <code>stream: true</code> config option returns data as a text column instead of writing a file — useful for sending graph content to an external process in real time.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(74,222,128,.10);color:var(--green)">Backups</span>
+    <span class="tag" style="background:rgba(74,222,128,.10);color:var(--green)">Data Migration</span>
+    <span class="tag" style="background:rgba(74,222,128,.10);color:var(--green)">ML Dataset Creation</span>
+    <span class="tag" style="background:rgba(74,222,128,.10);color:var(--green)">Graph Visualisation (Gephi)</span>
+    <span class="tag" style="background:rgba(74,222,128,.10);color:var(--green)">Embedding Pipelines</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--green)">apoc.export.json.all</td><td class="pd">Exports the entire graph (all nodes and relationships) to a JSON file or as a stream. Each element is a separate JSON object per line (JSONL format).</td><td class="pw">Full graph snapshot for backup or cross-environment migration</td></tr>
+    <tr><td class="pn" style="color:var(--green)">apoc.export.json.query</td><td class="pd">Runs a Cypher query and exports its result set to JSON. The query can return nodes, relationships, paths, or scalar values.</td><td class="pw">Exporting a subset of data (e.g. all Products enriched with Category) for embedding generation</td></tr>
+    <tr><td class="pn" style="color:var(--green)">apoc.export.csv.all</td><td class="pd">Exports all nodes and relationships as CSV files (one per label/type). Column headers are auto-generated from property keys.</td><td class="pw">Producing flat-file exports for analytics tools, BI dashboards, or spreadsheet consumers</td></tr>
+    <tr><td class="pn" style="color:var(--green)">apoc.export.csv.query</td><td class="pd">Exports results of a Cypher query to CSV, with query-defined column names as headers.</td><td class="pw">Generating report-ready CSVs from complex graph queries</td></tr>
+    <tr><td class="pn" style="color:var(--green)">apoc.export.graphml.all</td><td class="pd">Exports the entire graph to GraphML XML format, compatible with tools like Gephi, yEd, and Cytoscape for visual analysis.</td><td class="pw">Handing off graph data to network visualisation or analysis tools</td></tr>
+    <tr><td class="pn" style="color:var(--green)">apoc.export.cypher.all</td><td class="pd">Exports the graph as Cypher statements (CREATE/MERGE) that can be replayed to reconstruct the graph in another Neo4j instance.</td><td class="pw">Creating portable graph snapshots; seeding test databases from production data</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Export the result of a Cypher query to a JSONL file for downstream embedding.</span>
+<span class="cm">// `stream: false` writes to disk; change to `true` to get data as a column instead.</span>
+<span class="kw">CALL</span> <span class="fn">apoc.export.json.query</span>(
+  <span class="str">"MATCH (p:Product)-[:BELONGS_TO]->(c:Category)
+   RETURN p.sku AS id, p.name AS name, c.name AS category"</span>,
+  <span class="str">'file:///export/products.jsonl'</span>,
+  <span class="br">{</span>stream: <span class="kw2">false</span>, batchSize: <span class="num">1000</span><span class="br">}</span>
+) <span class="kw">YIELD</span> file, nodes, time
+<span class="kw">RETURN</span> file, nodes, time;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 3: REFACTOR ─── -->
+<div class="cat" id="cat3">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.22)">🔀</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--amber)">Category 03</div>
+      <div class="cat-title">Graph Refactoring</div>
+      <div class="cat-prefix">apoc.refactor.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">Graph Refactoring procedures let you <strong>reshape the graph structure without rewriting data</strong>. This is invaluable when evolving a data model after initial import: merging duplicate nodes, renaming labels or relationship types across the entire graph, moving properties between elements, inverting relationship directions, or extracting intermediate nodes to break direct connections into a richer multi-hop path. All operations work at scale across millions of elements through built-in batching.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(251,191,36,.10);color:var(--amber)">Schema Evolution</span>
+    <span class="tag" style="background:rgba(251,191,36,.10);color:var(--amber)">Deduplication</span>
+    <span class="tag" style="background:rgba(251,191,36,.10);color:var(--amber)">Data Model Migration</span>
+    <span class="tag" style="background:rgba(251,191,36,.10);color:var(--amber)">Relationship Reversal</span>
+    <span class="tag" style="background:rgba(251,191,36,.10);color:var(--amber)">Node Extraction</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.mergeNodes</td><td class="pd">Merges a list of nodes into a single surviving node. Combines labels, properties (configurable merge strategy: overwrite, discard, combine), and re-attaches all relationships. Essential for deduplication workflows.</td><td class="pw">Collapsing duplicate customer records, merging product variants</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.mergeRelationships</td><td class="pd">Merges a list of parallel relationships (same type, same start/end nodes) into one, combining their properties according to a configurable merge strategy.</td><td class="pw">Collapsing redundant edges after graph import</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.rename.label</td><td class="pd">Renames a node label across the entire graph (or a filtered subset of nodes). Adds the new label and removes the old one atomically per node.</td><td class="pw">Renaming a label during schema evolution without reloading data</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.rename.type</td><td class="pd">Changes a relationship type to a new name across all matching relationships. The new type is created and the old one removed per relationship.</td><td class="pw">Standardising relationship type names (e.g. BOUGHT → PURCHASED)</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.rename.nodeProperty</td><td class="pd">Renames a property key on all nodes (or a filtered subset), copying the value to the new key and removing the old one.</td><td class="pw">Harmonising property naming conventions across large datasets</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.cloneSubgraph</td><td class="pd">Clones a set of nodes and their connecting relationships, creating a complete independent copy of a subgraph. Useful for versioning or test fixture creation.</td><td class="pw">Creating a snapshot copy of a subgraph; setting up test environments</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.invertRelationship</td><td class="pd">Reverses the direction of a relationship, swapping its start and end nodes while preserving properties and type.</td><td class="pw">Correcting incorrectly-directed edges discovered post-import</td></tr>
+    <tr><td class="pn" style="color:var(--amber)">apoc.refactor.extractNode</td><td class="pd">Inserts a new intermediate node along one or more existing relationships, turning A→B into A→N→B. The intermediate node gets specified labels.</td><td class="pw">Enriching a direct connection with intermediate attributes (e.g. adding an Invoice node between Order and Supplier)</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Merge duplicate Customer nodes identified by matching email addresses.</span>
+<span class="cm">// apoc.refactor.mergeNodes combines all labels, props, and relationships.</span>
+<span class="kw">MATCH</span> (c:Customer)
+<span class="kw">WITH</span> c.email <span class="kw">AS</span> email, <span class="fn">collect</span>(c) <span class="kw">AS</span> dupes
+<span class="kw">WHERE</span> <span class="fn">size</span>(dupes) > <span class="num">1</span>
+<span class="kw">CALL</span> <span class="fn">apoc.refactor.mergeNodes</span>(dupes, <span class="br">{</span>
+  properties: <span class="str">'combine'</span>,   <span class="cm">// combine arrays for list properties</span>
+  mergeRels:  <span class="kw2">true</span>          <span class="cm">// also deduplicate resulting relationships</span>
+<span class="br">}</span>) <span class="kw">YIELD</span> node
+<span class="kw">RETURN</span> <span class="fn">count</span>(node) <span class="kw">AS</span> merged;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 4: GRAPH UPDATES ─── -->
+<div class="cat" id="cat4">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(167,139,250,.10);border:1px solid rgba(167,139,250,.22)">✏️</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--purple)">Category 04</div>
+      <div class="cat-title">Graph Updates</div>
+      <div class="cat-prefix">apoc.create.* &nbsp;·&nbsp; apoc.merge.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">Graph Update procedures enable <strong>dynamic, programmatic creation and modification</strong> of nodes and relationships at runtime — something that standard Cypher cannot do when label names or relationship types are not known statically at query-write time. For example, <code>apoc.create.node</code> accepts a list of labels computed from a variable, while <code>apoc.merge.node</code> merges a node dynamically using identity keys specified at runtime. These procedures are the building blocks of generic data loaders and schema-agnostic ETL frameworks.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(167,139,250,.10);color:var(--purple)">Dynamic Labels</span>
+    <span class="tag" style="background:rgba(167,139,250,.10);color:var(--purple)">Runtime Graph Creation</span>
+    <span class="tag" style="background:rgba(167,139,250,.10);color:var(--purple)">Generic ETL</span>
+    <span class="tag" style="background:rgba(167,139,250,.10);color:var(--purple)">UUID Generation</span>
+    <span class="tag" style="background:rgba(167,139,250,.10);color:var(--purple)">Idempotent Merges</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.create.node</td><td class="pd">Creates a node with a dynamic list of labels and a map of properties. Labels can be computed from variables — impossible with plain <code>CREATE</code>.</td><td class="pw">Generic data loaders where label names are not known at query-write time</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.create.relationship</td><td class="pd">Creates a relationship with a dynamic type string between two existing nodes, with a property map. Type must be a string variable.</td><td class="pw">Building graph loaders that read relationship types from data files</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.create.setProperty</td><td class="pd">Sets a single property on a node or relationship where the property key is a dynamic string variable.</td><td class="pw">Setting properties whose key names are determined at runtime from data</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.create.removeProperties</td><td class="pd">Removes a list of property keys from a node or relationship in one call.</td><td class="pw">Bulk-cleaning obsolete properties after schema migration</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.create.uuid</td><td class="pd">Generates a random UUID v4 string. Can be used in property assignments to ensure globally unique identifiers.</td><td class="pw">Assigning stable surrogate keys to new nodes during import</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.merge.node</td><td class="pd">Dynamically merges a node using runtime label and identity key variables. Accepts separate property maps for <code>ON CREATE</code> and <code>ON MATCH</code> semantics.</td><td class="pw">Schema-agnostic, idempotent loaders that must handle both insert and update</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.merge.relationship</td><td class="pd">Dynamically merges a relationship with a runtime type. Accepts identity properties and separate create/match property maps.</td><td class="pw">Idempotent relationship creation in generic graph loaders</td></tr>
+    <tr><td class="pn" style="color:var(--purple)">apoc.nodes.delete</td><td class="pd">Deletes a collection of nodes (and optionally their relationships) in batches to avoid memory pressure from large <code>DETACH DELETE</code> operations.</td><td class="pw">Bulk deletion of millions of nodes without heap exhaustion</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Create a node with dynamic labels — label names come from data, not code.</span>
+<span class="cm">// Standard Cypher CREATE cannot use a variable as a label name.</span>
+<span class="kw">WITH</span> [<span class="str">'Product'</span>, <span class="str">'Featured'</span>] <span class="kw">AS</span> labels,
+     <span class="br">{</span>sku: <span class="str">'P-001'</span>, name: <span class="str">'Laptop Stand'</span>, price: <span class="num">49.99</span><span class="br">}</span> <span class="kw">AS</span> props
+<span class="kw">CALL</span> <span class="fn">apoc.create.node</span>(labels, props) <span class="kw">YIELD</span> node
+<span class="kw">RETURN</span> node;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 5: PATH FINDING ─── -->
+<div class="cat" id="cat5">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.22)">🛤️</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--red)">Category 05</div>
+      <div class="cat-title">Path Finding &amp; Graph Traversal</div>
+      <div class="cat-prefix">apoc.path.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">While Cypher's built-in <code>shortestPath()</code> and variable-length path patterns handle many traversal needs, APOC's path procedures offer far more <strong>fine-grained filtering and traversal control</strong>. You can whitelist or blacklist node labels and relationship types at each hop, restrict traversal depth, define termination conditions, and extract complete subgraphs in a single call. These procedures are essential for influence analysis, supply chain reachability, recommendation systems, and any use case requiring bounded, filtered graph exploration.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(248,113,113,.10);color:var(--red)">Reachability Analysis</span>
+    <span class="tag" style="background:rgba(248,113,113,.10);color:var(--red)">Subgraph Extraction</span>
+    <span class="tag" style="background:rgba(248,113,113,.10);color:var(--red)">Influence Propagation</span>
+    <span class="tag" style="background:rgba(248,113,113,.10);color:var(--red)">Supply Chain Analysis</span>
+    <span class="tag" style="background:rgba(248,113,113,.10);color:var(--red)">Recommendations</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--red)">apoc.path.expand</td><td class="pd">Expands paths from one or more start nodes using a flexible filter syntax for relationship types (with direction), whitelisted and blacklisted labels, and min/max depth bounds. Returns full paths.</td><td class="pw">Deep graph exploration with complex label/type filtering; supply chain reachability</td></tr>
+    <tr><td class="pn" style="color:var(--red)">apoc.path.subgraphNodes</td><td class="pd">Returns all nodes reachable from the start nodes within the given depth and filter constraints, without returning the connecting relationships.</td><td class="pw">Finding all nodes in a community or connected component</td></tr>
+    <tr><td class="pn" style="color:var(--red)">apoc.path.subgraphAll</td><td class="pd">Returns both all reachable nodes and the relationships connecting them as a complete subgraph. Suitable for exporting or projecting a local neighbourhood.</td><td class="pw">Extracting a subgraph for visualisation, export, or local analysis</td></tr>
+    <tr><td class="pn" style="color:var(--red)">apoc.path.spanningTree</td><td class="pd">Computes a spanning tree (breadth-first) from start nodes — each node appears at most once, connected by the shortest path to the root. Returns relationships only.</td><td class="pw">Generating tree visualisations; computing BFS-shortest-path trees</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Expand from a Product node up to 3 hops across SUPPLIED_BY and SHIPS_TO edges.</span>
+<span class="cm">// '>' = outbound, '<' = inbound, '' = any direction.</span>
+<span class="cm">// Label filter '+Supplier|+Warehouse' whitelists only those labels.</span>
+<span class="kw">MATCH</span> (p:Product <span class="br">{</span>sku: <span class="str">'ECO-42'</span><span class="br">}</span>)
+<span class="kw">CALL</span> <span class="fn">apoc.path.expand</span>(p,
+  <span class="str">'SUPPLIED_BY>|SHIPS_TO>'</span>,        <span class="cm">// relationship filter</span>
+  <span class="str">'+Supplier|+Warehouse'</span>,            <span class="cm">// label whitelist</span>
+  <span class="num">1</span>, <span class="num">3</span>                               <span class="cm">// min depth, max depth</span>
+) <span class="kw">YIELD</span> path
+<span class="kw">RETURN</span> path;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 6: CYPHER EXECUTION ─── -->
+<div class="cat" id="cat6">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(45,212,191,.10);border:1px solid rgba(45,212,191,.22)">⚡</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--teal)">Category 06</div>
+      <div class="cat-title">Cypher Execution &amp; Batching</div>
+      <div class="cat-prefix">apoc.cypher.* &nbsp;·&nbsp; apoc.periodic.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">This is arguably the most <strong>operationally critical</strong> APOC category. It enables dynamic Cypher execution and — crucially — <strong>periodic/batch processing</strong> of large datasets. <code>apoc.periodic.iterate</code> is the canonical solution to the "cannot delete 10 million nodes at once" problem: it splits an arbitrarily large dataset into fixed-size transaction batches, committing incrementally to avoid heap pressure. Background submission and scheduled Cypher jobs round out a full operational job-scheduling toolkit within the database itself.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Batch Processing</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Incremental Commits</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Dynamic Cypher</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Background Jobs</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Out-of-Memory Prevention</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.periodic.iterate</td><td class="pd">The workhorse of APOC batch processing. Runs an outer "data source" query to produce rows, then applies an inner "action" query to each row in configurable transaction batches. Supports parallel execution and retries.</td><td class="pw">Any large-scale write operation: importing millions of records, bulk-updating properties, batch-creating relationships</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.periodic.commit</td><td class="pd">Runs a write Cypher statement repeatedly in separate transactions, each limited to a configurable number of changes, until the statement returns 0 affected rows. Self-terminating loop.</td><td class="pw">Paginated bulk deletes or updates where the size is unknown upfront</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.periodic.submit</td><td class="pd">Submits a Cypher statement to run asynchronously in a background thread. Returns immediately with a job reference. Results are not streamed back.</td><td class="pw">Fire-and-forget background tasks: sending notifications, updating caches</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.cypher.run</td><td class="pd">Executes an arbitrary Cypher read statement dynamically at runtime. The statement string and params map are passed as arguments.</td><td class="pw">Meta-programming: running Cypher stored in node properties or computed from data</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.cypher.doIt</td><td class="pd">Like <code>apoc.cypher.run</code> but for write statements. Executes dynamic Cypher with side effects in the current transaction.</td><td class="pw">Dynamic write operations in meta-driven ETL frameworks</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.cypher.runMany</td><td class="pd">Executes multiple Cypher statements separated by semicolons in sequence, as separate operations within one call.</td><td class="pw">Running a migration script with multiple sequential steps from a single procedure call</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.cypher.runTimeboxed</td><td class="pd">Runs a Cypher statement with a maximum execution time (ms). Aborts and returns partial results if the timeout is exceeded.</td><td class="pw">Time-bounded query execution in interactive applications where partial results are acceptable</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// apoc.periodic.iterate — the standard pattern for large-scale batched writes.</span>
+<span class="cm">// First query: produces rows (read-only, no write lock held across all rows).</span>
+<span class="cm">// Second query: processes each row in a separate batchSize-limited transaction.</span>
+<span class="kw">CALL</span> <span class="fn">apoc.periodic.iterate</span>(
+  <span class="str">"MATCH (p:Product) WHERE p.embedding IS NULL RETURN p"</span>,
+  <span class="str">"SET p.needsEmbedding = true"</span>,      <span class="cm">// inner write applied per batch</span>
+  <span class="br">{</span>batchSize: <span class="num">500</span>, parallel: <span class="kw2">false</span>, retries: <span class="num">3</span><span class="br">}</span>
+) <span class="kw">YIELD</span> batches, total, timeTaken, errorMessages
+<span class="kw">RETURN</span> batches, total, timeTaken, errorMessages;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 7: DATA STRUCTURES ─── -->
+<div class="cat" id="cat7">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(251,146,60,.10);border:1px solid rgba(251,146,60,.22)">📊</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--orange)">Category 07</div>
+      <div class="cat-title">Data Structures</div>
+      <div class="cat-prefix">apoc.map.* &nbsp;·&nbsp; apoc.coll.* &nbsp;·&nbsp; apoc.convert.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">Cypher's native collection and map manipulation is limited. The Data Structures category provides a comprehensive <strong>functional toolkit for maps, lists, and conversion operations</strong>. <code>apoc.map.*</code> functions let you merge, diff, subset, and transform maps. <code>apoc.coll.*</code> functions extend Cypher's list operations with set algebra, sorting, grouping, zipping, and statistical operations. <code>apoc.convert.*</code> handles serialisation between Cypher types, JSON strings, and other formats — critical for working with properties that store serialised data.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(251,146,60,.10);color:var(--orange)">Map Manipulation</span>
+    <span class="tag" style="background:rgba(251,146,60,.10);color:var(--orange)">List / Collection Ops</span>
+    <span class="tag" style="background:rgba(251,146,60,.10);color:var(--orange)">Set Algebra</span>
+    <span class="tag" style="background:rgba(251,146,60,.10);color:var(--orange)">JSON Conversion</span>
+    <span class="tag" style="background:rgba(251,146,60,.10);color:var(--orange)">Tree Serialisation</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure / Function</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.map.fromPairs</td><td class="pd">Converts a list of <code>[key, value]</code> pairs into a map object. The inverse of <code>apoc.map.pairs</code>.</td><td class="pw">Building property maps dynamically from a list of key-value rows</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.map.merge</td><td class="pd">Merges two maps, with the second map's values taking precedence for overlapping keys. Returns the combined map.</td><td class="pw">Combining default properties with override values during node creation</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.map.setKey</td><td class="pd">Returns a copy of a map with a single key set to a new value. Useful when map key names are dynamic.</td><td class="pw">Adding or overriding a dynamically-named key in a map</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.coll.union</td><td class="pd">Returns the union of two collections (all elements from both, deduplicated). Equivalent to set union.</td><td class="pw">Combining tag lists, label collections, or feature sets from two sources</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.coll.intersection</td><td class="pd">Returns only elements present in both collections. Equivalent to set intersection.</td><td class="pw">Finding common features between two products; shared connections</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.coll.subtract</td><td class="pd">Returns elements present in the first collection but not the second. Equivalent to set difference.</td><td class="pw">Finding unique features or permissions not shared with another set</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.coll.toSet</td><td class="pd">Removes duplicate elements from a list, returning a deduplicated collection in the original order.</td><td class="pw">Deduplicating collected values from aggregations</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.coll.sortNodes</td><td class="pd">Sorts a list of nodes by a specified property value in ascending or descending order.</td><td class="pw">Sorting collected nodes before slicing for top-N results</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.convert.toJson</td><td class="pd">Serialises a Cypher value (node, relationship, map, list, scalar) to its JSON string representation.</td><td class="pw">Storing complex structures as JSON strings in node properties</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.convert.fromJsonMap</td><td class="pd">Parses a JSON string into a Cypher map. Inverse of <code>apoc.convert.toJson</code> for object types.</td><td class="pw">Reading JSON stored in node properties back into a traversable map</td></tr>
+    <tr><td class="pn" style="color:var(--orange)">apoc.convert.toTree</td><td class="pd">Converts a list of paths into a hierarchical tree structure (nested maps). Useful for building JSON tree responses.</td><td class="pw">Rendering category hierarchies, org charts, or decision trees as nested JSON</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Collect products per category and convert the result into a nested tree.</span>
+<span class="kw">MATCH</span> path = (c:Category)&lt;-[:BELONGS_TO]-(p:Product)
+<span class="kw">WITH</span> <span class="fn">collect</span>(path) <span class="kw">AS</span> paths
+<span class="kw">CALL</span> <span class="fn">apoc.convert.toTree</span>(paths)
+<span class="kw">YIELD</span> value <span class="kw">AS</span> tree
+<span class="kw">RETURN</span> <span class="fn">apoc.convert.toJson</span>(tree) <span class="kw">AS</span> categoryTree;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 8: TEMPORAL ─── -->
+<div class="cat" id="cat8">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(96,165,250,.10);border:1px solid rgba(96,165,250,.22)">🕒</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--blue)">Category 08</div>
+      <div class="cat-title">Temporal &amp; Date-Time</div>
+      <div class="cat-prefix">apoc.date.* &nbsp;·&nbsp; apoc.temporal.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">Date and time handling is notoriously inconsistent across data sources. APOC's Temporal category provides a <strong>unified, format-aware toolkit</strong> for parsing, formatting, converting, and performing arithmetic on timestamps and Neo4j's native temporal types (Date, DateTime, LocalDateTime, Duration). The <code>apoc.date.*</code> functions work with Unix epoch milliseconds, while <code>apoc.temporal.*</code> functions work with Neo4j's ISO 8601 native temporal values — enabling clean interoperability between imported string dates and the native type system.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(96,165,250,.10);color:var(--blue)">Date Parsing</span>
+    <span class="tag" style="background:rgba(96,165,250,.10);color:var(--blue)">Timestamp Conversion</span>
+    <span class="tag" style="background:rgba(96,165,250,.10);color:var(--blue)">Date Arithmetic</span>
+    <span class="tag" style="background:rgba(96,165,250,.10);color:var(--blue)">Timezone Handling</span>
+    <span class="tag" style="background:rgba(96,165,250,.10);color:var(--blue)">ISO 8601 Formatting</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Function</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.date.format</td><td class="pd">Formats a Unix timestamp (in a given unit: ms, s, m, h, d) to a date string using a Java <code>SimpleDateFormat</code> pattern string. Supports timezone offset.</td><td class="pw">Converting stored epoch timestamps back to human-readable strings for display</td></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.date.parse</td><td class="pd">Parses a date string with a specified format pattern into a Unix timestamp in the specified unit. Handles custom patterns and timezones.</td><td class="pw">Ingesting date strings from CSV/JSON where format varies per source</td></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.date.add</td><td class="pd">Adds an amount of a time unit (ms, s, d, m, h, w) to a timestamp, returning the new timestamp in the original unit.</td><td class="pw">Computing expiry dates, subscription end dates, or scheduling offsets</td></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.date.convert</td><td class="pd">Converts a timestamp value from one unit to another (e.g. seconds to milliseconds, hours to minutes).</td><td class="pw">Normalising timestamp units across mixed data sources</td></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.date.currentTimestamp</td><td class="pd">Returns the current wall-clock time as a Unix timestamp in milliseconds. Equivalent to <code>timestamp()</code> but within the APOC namespace for consistency.</td><td class="pw">Timestamping node creation, setting TTL values, measuring elapsed time</td></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.temporal.format</td><td class="pd">Formats a Neo4j native temporal value (Date, DateTime, LocalDateTime) into a string using a format pattern.</td><td class="pw">Formatting native Neo4j temporal values for export or display</td></tr>
+    <tr><td class="pn" style="color:var(--blue)">apoc.temporal.toZonedTemporal</td><td class="pd">Parses a date/time string into a Neo4j ZonedDateTime temporal value, supporting timezone-aware datetimes.</td><td class="pw">Converting imported ISO 8601 strings into Neo4j's native temporal type for indexing and arithmetic</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Parse CSV date string → epoch ms → format back for display.</span>
+<span class="kw">WITH</span> <span class="str">'2024-03-15 09:30:00'</span> <span class="kw">AS</span> raw
+<span class="kw">WITH</span> <span class="fn">apoc.date.parse</span>(raw, <span class="str">'ms'</span>, <span class="str">'yyyy-MM-dd HH:mm:ss'</span>) <span class="kw">AS</span> epoch
+<span class="cm">// Add 30 days and format result</span>
+<span class="kw">WITH</span> epoch, <span class="fn">apoc.date.add</span>(epoch, <span class="str">'ms'</span>, <span class="num">30</span>, <span class="str">'d'</span>) <span class="kw">AS</span> expiry
+<span class="kw">RETURN</span> <span class="fn">apoc.date.format</span>(epoch,  <span class="str">'ms'</span>, <span class="str">'dd MMM yyyy'</span>) <span class="kw">AS</span> start,
+       <span class="fn">apoc.date.format</span>(expiry, <span class="str">'ms'</span>, <span class="str">'dd MMM yyyy'</span>) <span class="kw">AS</span> expiryDate;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 9: MATH ─── -->
+<div class="cat" id="cat9">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(192,132,252,.10);border:1px solid rgba(192,132,252,.22)">🔢</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--violet)">Category 09</div>
+      <div class="cat-title">Mathematical Operations</div>
+      <div class="cat-prefix">apoc.math.* &nbsp;·&nbsp; apoc.number.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">APOC's Mathematical category extends Cypher's numeric capabilities with <strong>precision rounding, boundary constants, and locale-aware number parsing and formatting</strong>. These functions are particularly useful in scoring and ranking pipelines where consistent numeric formatting and rounding are required, and in ETL pipelines that consume numbers serialised in locale-specific formats (e.g. European <code>1.234,56</code> notation vs US <code>1,234.56</code>).</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(192,132,252,.10);color:var(--violet)">Precision Rounding</span>
+    <span class="tag" style="background:rgba(192,132,252,.10);color:var(--violet)">Locale-Aware Parsing</span>
+    <span class="tag" style="background:rgba(192,132,252,.10);color:var(--violet)">Score Normalisation</span>
+    <span class="tag" style="background:rgba(192,132,252,.10);color:var(--violet)">Numeric Formatting</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Function</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--violet)">apoc.math.round</td><td class="pd">Rounds a floating-point number to a specified number of decimal places using a configurable rounding mode (HALF_UP, CEILING, FLOOR, etc.).</td><td class="pw">Normalising similarity scores, prices, or computed metrics to a fixed precision</td></tr>
+    <tr><td class="pn" style="color:var(--violet)">apoc.math.maxLong</td><td class="pd">Returns the maximum value of a Java long integer (<code>9,223,372,036,854,775,807</code>). Useful as a sentinel value in comparisons.</td><td class="pw">Setting upper bounds in range queries; sentinel values for "infinity"</td></tr>
+    <tr><td class="pn" style="color:var(--violet)">apoc.math.minLong</td><td class="pd">Returns the minimum Java long value. Useful as a sentinel lower bound.</td><td class="pw">Setting lower bounds; initialising running minimums</td></tr>
+    <tr><td class="pn" style="color:var(--violet)">apoc.number.format</td><td class="pd">Formats a number as a string using a Java <code>DecimalFormat</code> pattern and an optional locale tag (e.g. <code>'de-DE'</code> for German notation).</td><td class="pw">Generating locale-specific price strings, percentages, or large-number formatting for reports</td></tr>
+    <tr><td class="pn" style="color:var(--violet)">apoc.number.parseInt</td><td class="pd">Parses a string to an integer using an optional radix (base). Handles hex, octal, and binary string representations.</td><td class="pw">Parsing hex IDs, bitmask flags, or base-N encoded values from imported data</td></tr>
+    <tr><td class="pn" style="color:var(--violet)">apoc.number.parseFloat</td><td class="pd">Parses a string to a floating-point number using an optional decimal format pattern, supporting locale-specific decimal separators.</td><td class="pw">Parsing European-format numbers from CSV (e.g. <code>'1.234,56'</code> → <code>1234.56</code>)</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Format a similarity score to 3 decimal places and a price to locale-specific string.</span>
+<span class="kw">WITH</span> <span class="num">0.8734521</span> <span class="kw">AS</span> rawScore, <span class="num">1234.5678</span> <span class="kw">AS</span> price
+<span class="kw">RETURN</span>
+  <span class="fn">apoc.math.round</span>(rawScore, <span class="num">3</span>, <span class="str">'HALF_UP'</span>) <span class="kw">AS</span> score,
+  <span class="fn">apoc.number.format</span>(price, <span class="str">'#,##0.00'</span>, <span class="str">'en-US'</span>) <span class="kw">AS</span> priceUS,
+  <span class="fn">apoc.number.format</span>(price, <span class="str">'#,##0.00'</span>, <span class="str">'de-DE'</span>) <span class="kw">AS</span> priceDE;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 10: VIRTUAL ─── -->
+<div class="cat" id="cat10">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(244,114,182,.10);border:1px solid rgba(244,114,182,.22)">🌐</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--pink)">Category 10</div>
+      <div class="cat-title">Virtual Nodes &amp; Relationships</div>
+      <div class="cat-prefix">apoc.create.v* &nbsp;·&nbsp; apoc.graph.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">Virtual Nodes and Relationships exist <strong>only in memory during query execution</strong> — they are never persisted to the database. This makes them powerful for building computed views, projection graphs, and exploratory analyses without modifying the underlying data. They are especially useful for creating aggregated "meta-nodes" that summarise communities, building temporary intermediate representations for algorithm input, or presenting a simplified view of a complex subgraph to a visualisation layer.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(244,114,182,.10);color:var(--pink)">In-Memory Projections</span>
+    <span class="tag" style="background:rgba(244,114,182,.10);color:var(--pink)">Graph Summaries</span>
+    <span class="tag" style="background:rgba(244,114,182,.10);color:var(--pink)">Computed Views</span>
+    <span class="tag" style="background:rgba(244,114,182,.10);color:var(--pink)">Algorithm Input</span>
+    <span class="tag" style="background:rgba(244,114,182,.10);color:var(--pink)">Safe Exploration</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure / Function</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--pink)">apoc.create.vNode</td><td class="pd">Creates a virtual node with given labels and properties. The node exists only for the duration of the current query. Appears in visualisations just like a real node.</td><td class="pw">Creating in-memory aggregate nodes for graph projections; building algorithm input without writes</td></tr>
+    <tr><td class="pn" style="color:var(--pink)">apoc.create.vRelationship</td><td class="pd">Creates a virtual relationship with a given type and properties between two nodes (real or virtual). Never persisted to disk.</td><td class="pw">Connecting real or virtual nodes for visualisation without modifying stored relationships</td></tr>
+    <tr><td class="pn" style="color:var(--pink)">apoc.create.vPattern</td><td class="pd">Creates a complete virtual node-relationship-node triple in a single call. Returns the from-node, relationship, and to-node as separate yield columns.</td><td class="pw">Building parameterised graph templates for repeated pattern generation</td></tr>
+    <tr><td class="pn" style="color:var(--pink)">apoc.graph.fromData</td><td class="pd">Assembles a named virtual graph object from explicit lists of nodes and relationships. The graph object can be returned as a unit for visualisation.</td><td class="pw">Creating a named subgraph view from a mixed set of nodes and relationships</td></tr>
+    <tr><td class="pn" style="color:var(--pink)">apoc.graph.fromCypher</td><td class="pd">Runs a Cypher query and assembles all returned nodes and relationships into a virtual named graph object.</td><td class="pw">Packaging a complex traversal result as a labelled graph for the Neo4j Browser or Bloom</td></tr>
+    <tr><td class="pn" style="color:var(--pink)">apoc.graph.fromPaths</td><td class="pd">Assembles a virtual graph from a list of path objects, combining all nodes and relationships from all paths into a single deduplicated graph.</td><td class="pw">Visualising the union of multiple paths as a single connected subgraph</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Create a virtual "meta-graph" showing Category → Supplier connections</span>
+<span class="cm">// without storing any new data. Useful for visualisation only.</span>
+<span class="kw">MATCH</span> (c:Category)&lt;-[:BELONGS_TO]-(p:Product)&lt;-[:SUPPLIES]-(s:Supplier)
+<span class="kw">WITH</span> c, s, <span class="fn">count</span>(p) <span class="kw">AS</span> productCount
+<span class="kw">CALL</span> <span class="fn">apoc.create.vRelationship</span>(c, <span class="str">'SOURCED_FROM'</span>, <span class="br">{</span>count: productCount<span class="br">}</span>, s)
+<span class="kw">YIELD</span> rel
+<span class="kw">RETURN</span> c, rel, s;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 11: BACKGROUND ─── -->
+<div class="cat" id="cat11">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(163,230,53,.10);border:1px solid rgba(163,230,53,.22)">⏱️</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--lime)">Category 11</div>
+      <div class="cat-title">Background Operations</div>
+      <div class="cat-prefix">apoc.periodic.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">Beyond batching, APOC provides a lightweight <strong>job scheduling and management system</strong> built directly into the database. Background jobs run Cypher statements asynchronously in separate threads, freeing the calling session immediately. Countdown timers enable self-scheduling loops. All running jobs can be inspected and cancelled at any time. While not a replacement for production schedulers (cron, Airflow, Temporal), this is invaluable for database-internal housekeeping tasks that should not block application queries.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(163,230,53,.10);color:var(--lime)">Async Execution</span>
+    <span class="tag" style="background:rgba(163,230,53,.10);color:var(--lime)">Job Scheduling</span>
+    <span class="tag" style="background:rgba(163,230,53,.10);color:var(--lime)">Housekeeping</span>
+    <span class="tag" style="background:rgba(163,230,53,.10);color:var(--lime)">TTL Expiry</span>
+    <span class="tag" style="background:rgba(163,230,53,.10);color:var(--lime)">Non-Blocking Ops</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--lime)">apoc.periodic.list</td><td class="pd">Returns all currently registered and running background jobs with their names, status, delay, and associated Cypher statement.</td><td class="pw">Monitoring, auditing, or debugging active background tasks</td></tr>
+    <tr><td class="pn" style="color:var(--lime)">apoc.periodic.cancel</td><td class="pd">Cancels a named background job by its registered name. The current execution of the job (if running) is allowed to complete.</td><td class="pw">Stopping a scheduled task before its next execution; emergency shutdown of runaway jobs</td></tr>
+    <tr><td class="pn" style="color:var(--lime)">apoc.periodic.countdown</td><td class="pd">Schedules a Cypher statement to execute repeatedly with a configurable interval (ms), decrementing a counter property on a designated node until it reaches zero, then stops.</td><td class="pw">Self-terminating scheduled tasks; retry loops with a maximum attempt count</td></tr>
+    <tr><td class="pn" style="color:var(--lime)">apoc.periodic.submit</td><td class="pd">Submits a Cypher statement as a named, one-shot asynchronous job. The caller receives a job reference immediately; results are not returned to the caller.</td><td class="pw">Fire-and-forget operations: cache warming, index population, async notifications</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Submit a background job to pre-compute similarity scores.</span>
+<span class="cm">// The calling session is released immediately — the job runs in a background thread.</span>
+<span class="kw">CALL</span> <span class="fn">apoc.periodic.submit</span>(
+  <span class="str">'compute-similarities'</span>,              <span class="cm">// job name (unique)</span>
+  <span class="str">"MATCH (a:Product),(b:Product)
+   WHERE a &lt;&gt; b AND a.embedding IS NOT NULL AND b.embedding IS NOT NULL
+   WITH a, b, apoc.math.round(
+     reduce(d=0.0, i IN range(0,size(a.embedding)-1) |
+       d + a.embedding[i]*b.embedding[i]), 4, 'HALF_UP') AS sim
+   WHERE sim > 0.85
+   MERGE (a)-[:SIMILAR_TO {score:sim}]->(b)"</span>
+) <span class="kw">YIELD</span> name, submitted
+<span class="kw">RETURN</span> name, submitted;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 12: INTROSPECTION ─── -->
+<div class="cat" id="cat12">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(250,204,21,.10);border:1px solid rgba(250,204,21,.22)">🔍</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--yellow)">Category 12</div>
+      <div class="cat-title">Database Introspection</div>
+      <div class="cat-prefix">apoc.meta.* &nbsp;·&nbsp; apoc.schema.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">The Introspection category provides a <strong>live, queryable view of the graph's schema and statistics</strong> without requiring access to the Neo4j configuration files or JMX. <code>apoc.meta.schema()</code> returns a comprehensive JSON-like summary of all node labels, their property keys, types, and connections — effectively a runtime schema graph. <code>apoc.meta.stats()</code> provides label and relationship type counts. These procedures are invaluable for building schema-aware tooling, data quality dashboards, and automated documentation generators.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(250,204,21,.10);color:var(--yellow)">Schema Discovery</span>
+    <span class="tag" style="background:rgba(250,204,21,.10);color:var(--yellow)">Data Quality</span>
+    <span class="tag" style="background:rgba(250,204,21,.10);color:var(--yellow)">Documentation</span>
+    <span class="tag" style="background:rgba(250,204,21,.10);color:var(--yellow)">Index Management</span>
+    <span class="tag" style="background:rgba(250,204,21,.10);color:var(--yellow)">Constraint Enforcement</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--yellow)">apoc.meta.schema</td><td class="pd">Returns a rich schema summary as a nested map: for each label, yields property names, inferred types, counts, and outgoing/incoming relationship types with their target labels. Sampled from the actual data.</td><td class="pw">Generating schema documentation; building schema-aware query builders or ORM layers</td></tr>
+    <tr><td class="pn" style="color:var(--yellow)">apoc.meta.stats</td><td class="pd">Returns high-level statistics: total node count, total relationship count, and per-label and per-relationship-type counts. Very fast — reads from cached statistics.</td><td class="pw">Health checks; validating that expected data volumes were loaded; monitoring dashboards</td></tr>
+    <tr><td class="pn" style="color:var(--yellow)">apoc.meta.graph</td><td class="pd">Returns a virtual meta-graph where each node represents a label and each relationship represents a relationship type between those labels. Visualises the data model graphically.</td><td class="pw">Visual data model exploration; onboarding new team members to a graph schema</td></tr>
+    <tr><td class="pn" style="color:var(--yellow)">apoc.schema.assert</td><td class="pd">Declaratively asserts a set of constraints and indexes. Compares the desired state against the current state and creates or drops indexes/constraints as needed to reach the target state.</td><td class="pw">Infrastructure-as-code for Neo4j schema; idempotent schema migrations in CI/CD pipelines</td></tr>
+    <tr><td class="pn" style="color:var(--yellow)">apoc.schema.nodes</td><td class="pd">Lists all existing indexes and constraints for node labels, including their type, status, and affected properties.</td><td class="pw">Auditing index coverage; finding missing indexes on frequently queried properties</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Retrieve schema statistics and check for expected node counts after ETL.</span>
+<span class="kw">CALL</span> <span class="fn">apoc.meta.stats</span>()
+<span class="kw">YIELD</span> labels, nodeCount, relCount
+<span class="kw">RETURN</span>
+  nodeCount                    <span class="kw">AS</span> totalNodes,
+  relCount                     <span class="kw">AS</span> totalRelationships,
+  labels.Product               <span class="kw">AS</span> products,
+  labels.Customer              <span class="kw">AS</span> customers,
+  labels.Order                 <span class="kw">AS</span> orders;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 13: UTILITIES ─── -->
+<div class="cat" id="cat13">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(45,212,191,.10);border:1px solid rgba(45,212,191,.22)">🔧</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--teal)">Category 13</div>
+      <div class="cat-title">Utilities &amp; Text</div>
+      <div class="cat-prefix">apoc.util.* &nbsp;·&nbsp; apoc.text.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">The Utilities category is a <strong>grab-bag of essential helper functions</strong> that fill gaps left by Cypher's standard library. String manipulation functions in <code>apoc.text.*</code> provide fuzzy matching, case conversion, slug generation, regex group extraction, and phonetic similarity — all critical for data cleaning and entity resolution pipelines. <code>apoc.util.*</code> provides runtime validation, hashing, sleep, and other operational helpers that are difficult or impossible to express in pure Cypher.</p>
+  <div class="tags">
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">String Manipulation</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Fuzzy Matching</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Hashing &amp; Crypto</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Data Validation</span>
+    <span class="tag" style="background:rgba(45,212,191,.10);color:var(--teal)">Entity Resolution</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Function / Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.util.validate</td><td class="pd">Throws an exception with a formatted message if a boolean predicate evaluates to true. Functions as a Cypher-native assertion. Params are interpolated into the message with <code>%s</code>/<code>%d</code>.</td><td class="pw">Data quality assertions in ETL pipelines; pre-condition checks before destructive operations</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.util.sleep</td><td class="pd">Pauses the current Cypher thread for a specified number of milliseconds. Useful for rate-limiting calls to external services within load loops.</td><td class="pw">Throttling API calls within <code>apoc.load.json</code> loops; simulating processing delays in tests</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.util.sha256</td><td class="pd">Returns the SHA-256 hex digest of a string or list of values. Deterministic hash useful for producing stable identifiers from composite keys.</td><td class="pw">Generating stable node IDs from composite natural keys; data fingerprinting for change detection</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.regexGroups</td><td class="pd">Extracts all regex capture groups from a string. Returns a list of lists, one per match, each containing the captured groups.</td><td class="pw">Parsing structured text fields; extracting version numbers, codes, or IDs from free text</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.join</td><td class="pd">Joins a list of strings into a single string with a specified delimiter. Similar to Python's <code>str.join()</code>.</td><td class="pw">Assembling comma-separated lists, SQL IN clauses, or display strings from collected values</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.levenshteinDistance</td><td class="pd">Computes the Levenshtein edit distance between two strings — the minimum number of single-character insertions, deletions, or substitutions needed to transform one into the other.</td><td class="pw">Fuzzy entity matching; detecting near-duplicate names or addresses in deduplication workflows</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.distance</td><td class="pd">Returns the normalised Levenshtein similarity as a score between 0 (completely different) and 1 (identical strings). Easier to threshold than raw edit distance.</td><td class="pw">Scoring candidate duplicate pairs; building fuzzy-match filters in entity resolution</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.slug</td><td class="pd">Converts a string to a URL-safe slug by lowercasing, replacing spaces with a delimiter, and removing special characters.</td><td class="pw">Generating clean URL slugs or machine-readable IDs from display names</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.camelCase</td><td class="pd">Converts a string to camelCase format. Handles spaces, underscores, and hyphens as word separators.</td><td class="pw">Normalising property key names; generating code-friendly identifiers from human-readable strings</td></tr>
+    <tr><td class="pn" style="color:var(--teal)">apoc.text.snakeCase</td><td class="pd">Converts a string to snake_case format. Handles camelCase, spaces, and hyphens.</td><td class="pw">Normalising property names to snake_case for consistency across data sources</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Find near-duplicate Supplier nodes using normalised Levenshtein similarity.</span>
+<span class="cm">// A score above 0.85 indicates very similar names — likely duplicates.</span>
+<span class="kw">MATCH</span> (a:Supplier), (b:Supplier)
+<span class="kw">WHERE</span> a.id < b.id   <span class="cm">// avoid comparing a→b and b→a separately</span>
+  <span class="kw">AND</span> <span class="fn">apoc.text.distance</span>(
+        <span class="fn">toLower</span>(a.name),
+        <span class="fn">toLower</span>(b.name)
+      ) > <span class="num">0.85</span>
+<span class="kw">RETURN</span> a.name, b.name,
+       <span class="fn">apoc.math.round</span>(<span class="fn">apoc.text.distance</span>(<span class="fn">toLower</span>(a.name), <span class="fn">toLower</span>(b.name)), <span class="num">3</span>, <span class="str">'HALF_UP'</span>) <span class="kw">AS</span> similarity
+<span class="kw">ORDER BY</span> similarity <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">20</span>;</div>
+</div>
+
+<!-- ───────────────────────────── CAT 14: TRIGGERS ─── -->
+<div class="cat" id="cat14">
+  <div class="cat-hdr">
+    <div class="cat-ico" style="background:rgba(244,63,94,.10);border:1px solid rgba(244,63,94,.22)">🔔</div>
+    <div class="cat-meta">
+      <div class="cat-num" style="color:var(--rose)">Category 14</div>
+      <div class="cat-title">Triggers</div>
+      <div class="cat-prefix">apoc.trigger.*</div>
+    </div>
+  </div>
+  <p class="cat-desc">APOC Triggers are <strong>Cypher-based database event hooks</strong> — reactive procedures that fire automatically when the graph is modified. Similar to SQL database triggers, they allow you to react to node or relationship creation, update, or deletion events by executing a Cypher statement in the same or a subsequent transaction. Triggers are invaluable for maintaining derived properties, audit logs, denormalised caches, and automatic relationship creation as a side effect of other writes. They must be enabled in the Neo4j configuration before use.</p>
+  <div class="info" style="background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.25)">
+    <div class="info-ico">⚠️</div>
+    <div class="info-body">
+      <strong>Configuration Required</strong>
+      Triggers must be enabled in <code>neo4j.conf</code> with <code>apoc.trigger.enabled=true</code> (and restarted) before any trigger procedures will work. On Neo4j 5.x, use <code>apoc.trigger.install</code> for cluster-aware installation.
+    </div>
+  </div>
+  <div class="tags">
+    <span class="tag" style="background:rgba(244,63,94,.10);color:var(--rose)">Event-Driven</span>
+    <span class="tag" style="background:rgba(244,63,94,.10);color:var(--rose)">Audit Logging</span>
+    <span class="tag" style="background:rgba(244,63,94,.10);color:var(--rose)">Derived Properties</span>
+    <span class="tag" style="background:rgba(244,63,94,.10);color:var(--rose)">Auto-Relationships</span>
+    <span class="tag" style="background:rgba(244,63,94,.10);color:var(--rose)">Cache Invalidation</span>
+  </div>
+  <div class="pt-wrap"><table>
+    <tr><th>Procedure</th><th>Description</th><th>When to Use</th></tr>
+    <tr><td class="pn" style="color:var(--rose)">apoc.trigger.install</td><td class="pd">Installs a named trigger on a specified database (Neo4j 5.x cluster-aware API). Accepts a selector (createdNodes, deletedNodes, assignedNodeProperties, etc.) and a Cypher action query.</td><td class="pw">Production cluster environments; registering persistent triggers that survive restarts</td></tr>
+    <tr><td class="pn" style="color:var(--rose)">apoc.trigger.add</td><td class="pd">Adds a named trigger (legacy API, Neo4j 4.x compatible). Accepts a phase (before/after), a selector for which change types to react to, and a Cypher action.</td><td class="pw">Self-hosted Neo4j 4.x instances; simpler single-instance setups</td></tr>
+    <tr><td class="pn" style="color:var(--rose)">apoc.trigger.remove</td><td class="pd">Removes a registered trigger by its name. The trigger stops firing immediately after removal.</td><td class="pw">Removing an outdated trigger during a schema migration or feature rollout</td></tr>
+    <tr><td class="pn" style="color:var(--rose)">apoc.trigger.list</td><td class="pd">Lists all registered triggers with their name, Cypher action, selector, phase, paused status, and last execution statistics.</td><td class="pw">Auditing which triggers are active; debugging trigger-related performance issues</td></tr>
+    <tr><td class="pn" style="color:var(--rose)">apoc.trigger.pause</td><td class="pd">Temporarily pauses a named trigger without removing it. The trigger is retained but will not fire until resumed.</td><td class="pw">Disabling a trigger during a bulk load operation to avoid unnecessary overhead</td></tr>
+    <tr><td class="pn" style="color:var(--rose)">apoc.trigger.resume</td><td class="pd">Resumes a previously paused trigger, re-enabling it to fire on subsequent matching graph changes.</td><td class="pw">Re-enabling a trigger after a bulk load or maintenance window</td></tr>
+  </table></div>
+  <div class="cb"><span class="cm">// Install a trigger that automatically timestamps every Review node on creation.</span>
+<span class="cm">// `createdNodes` selector provides a map of newly created nodes keyed by label.</span>
+<span class="kw">CALL</span> <span class="fn">apoc.trigger.install</span>(
+  <span class="str">'neo4j'</span>,                               <span class="cm">// database name</span>
+  <span class="str">'stamp-new-reviews'</span>,                   <span class="cm">// unique trigger name</span>
+  <span class="str">"UNWIND $createdNodes AS n
+   WHERE 'Review' IN labels(n)
+   SET n.createdAt = timestamp(),
+       n.updatedAt = timestamp()"</span>,       <span class="cm">// Cypher action ($createdNodes injected by APOC)</span>
+  <span class="br">{</span>phase: <span class="str">'after'</span><span class="br">}</span>                     <span class="cm">// fire after the creating transaction commits</span>
+) <span class="kw">YIELD</span> name, installed
+<span class="kw">RETURN</span> name, installed;</div>
+</div>
+
+<!-- ═══════════════════════════════════════ REFERENCES ═══ -->
+<hr id="references">
+<section class="section">
+  <div class="s-label">Official Documentation</div>
+  <h2>Reference Links &amp; Further Reading</h2>
+  <p>The 14 categories and procedures covered in this guide represent the most frequently used subset of APOC. For the <strong>complete reference of all 450+ procedures and functions</strong> — including signatures, parameter types, yield columns, and configuration options — consult the official Neo4j documentation below.</p>
+  <div class="ref-grid">
+    <a class="ref-card" href="https://neo4j.com/docs/apoc/current/overview/" target="_blank">
+      <div class="rc-label" style="color:var(--cyan)">📋 Complete Reference</div>
+      <div class="rc-title">APOC Procedures &amp; Functions Overview</div>
+      <div class="rc-desc">The full index of all 450+ APOC Core procedures and functions with signatures, yield columns, and parameter types.</div>
+    </a>
+    <a class="ref-card" href="https://neo4j.com/docs/apoc/current/" target="_blank">
+      <div class="rc-label" style="color:var(--green)">📖 Core Documentation</div>
+      <div class="rc-title">APOC Core User Guide</div>
+      <div class="rc-desc">Comprehensive documentation for all APOC Core categories including configuration, installation, and detailed examples.</div>
+    </a>
+    <a class="ref-card" href="https://github.com/neo4j/apoc" target="_blank">
+      <div class="rc-label" style="color:var(--amber)">⭐ GitHub Repository</div>
+      <div class="rc-title">neo4j/apoc on GitHub</div>
+      <div class="rc-desc">Source code, issue tracker, release downloads, and contribution guidelines for APOC Core.</div>
+    </a>
+    <a class="ref-card" href="https://neo4j.com/labs/apoc/" target="_blank">
+      <div class="rc-label" style="color:var(--purple)">🧪 APOC Extended</div>
+      <div class="rc-title">APOC Extended &amp; Neo4j Labs</div>
+      <div class="rc-desc">Documentation for APOC Extended's additional 50 procedures — NLP, MongoDB, ElasticSearch, and more experimental features.</div>
+    </a>
+    <a class="ref-card" href="https://community.neo4j.com/c/neo4j-graph-platform/procedures-apoc/77" target="_blank">
+      <div class="rc-label" style="color:var(--teal)">💬 Community Forum</div>
+      <div class="rc-title">Neo4j Community — APOC &amp; Procedures</div>
+      <div class="rc-desc">Ask questions, share patterns, and find community-contributed APOC examples and solutions.</div>
+    </a>
+    <a class="ref-card" href="https://neo4j.com/docs/apoc/current/installation/" target="_blank">
+      <div class="rc-label" style="color:var(--rose)">⚙️ Installation Guide</div>
+      <div class="rc-title">APOC Installation &amp; Configuration</div>
+      <div class="rc-desc">Step-by-step setup for Desktop, Docker, AuraDB, Kubernetes, and self-hosted Neo4j environments.</div>
+    </a>
+  </div>
+  <div class="info" style="background:var(--gold-d);border:1px solid var(--gold-b)">
+    <div class="info-ico">💡</div>
+    <div class="info-body">
+      <strong>Discover Procedures In-Database</strong>
+      You can always explore available APOC procedures directly from Cypher:<br>
+      <code>CALL apoc.help('apoc.load') YIELD name, description RETURN name, description</code><br>
+      This queries the live procedure registry and includes procedures added by plugins you have installed locally.
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════ CTA ═══ -->
+<div class="project-cta" id="project">
+  <div class="cta-badge">🛠 Sample Project</div>
+  <div class="cta-title">E-Commerce Intelligence Graph<br>— GraphRAG Pipeline</div>
+  <div class="cta-desc">See all 14 APOC categories in action in a fully documented, end-to-end data pipeline — from schema bootstrap through vector embedding and GraphRAG semantic retrieval.</div>
+  <div class="cta-pills">
+    <span class="cta-pill" style="background:rgba(56,189,248,.12);color:var(--cyan);border-color:rgba(56,189,248,.3)">Neo4j + APOC Core</span>
+    <span class="cta-pill" style="background:rgba(74,222,128,.10);color:var(--green);border-color:rgba(74,222,128,.3)">8-Step Cypher Pipeline</span>
+    <span class="cta-pill" style="background:rgba(167,139,250,.10);color:var(--purple);border-color:rgba(167,139,250,.3)">Weaviate Vector DB</span>
+    <span class="cta-pill" style="background:rgba(251,191,36,.10);color:var(--amber);border-color:rgba(251,191,36,.3)">OpenAI Embeddings</span>
+    <span class="cta-pill" style="background:rgba(248,113,113,.10);color:var(--red);border-color:rgba(248,113,113,.3)">GPT-4o GraphRAG</span>
+  </div>
+  <button class="cta-btn" onclick="openPipeline()">
+    <span>🚀</span> Open GraphRAG Pipeline Project
+  </button>
+  <div class="cta-note">Includes fully annotated Cypher scripts, Python embedding pipeline, Weaviate schema, and GraphRAG retriever</div>
+</div>
+
+</article>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <p><strong>Neo4j APOC Procedures — The Definitive Guide</strong></p>
+  <p>Covers APOC Core 2026 &nbsp;·&nbsp; Neo4j 5.x &nbsp;·&nbsp; 14 Categories &nbsp;·&nbsp; 80+ Key Procedures Documented</p>
+  <p style="margin-top:8px">
+    Official docs: <a href="https://neo4j.com/docs/apoc/current/" target="_blank">neo4j.com/docs/apoc/current</a>
+    &nbsp;·&nbsp;
+    Full procedure index: <a href="https://neo4j.com/docs/apoc/current/overview/" target="_blank">neo4j.com/docs/apoc/current/overview</a>
+  </p>
+</footer>
+
+</div><!-- /page -->
+
+<script>
+// Opens the GraphRAG pipeline artifact by sending a prompt to the conversation
+function openPipeline() {
+  if (window.sendPrompt) {
+    window.sendPrompt('Open the GraphRAG Pipeline project artifact — the E-Commerce Intelligence Graph sample project');
+  } else {
+    alert('Click the "graphrag-pipeline" artifact in this conversation to view the sample project.');
+  }
+}
+
+// Highlight the active TOC link based on scroll position
+const tocLinks = document.querySelectorAll('.toc a');
+const sections = [];
+tocLinks.forEach(a => {
+  const id = a.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ id, el, a });
+});
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY + 120;
+  let active = sections[0];
+  sections.forEach(s => { if (scrollY >= s.el.offsetTop) active = s; });
+  tocLinks.forEach(a => a.style.color = '');
+  if (active) active.a.style.color = 'var(--gold)';
+}, { passive: true });
+</script>
+</body>
+</html>
