@@ -1,0 +1,15 @@
+{
+  "name": "bio-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static portfolio site. Holds the local build pipeline for the GraphRAG demo bundle only — the rest of the site is hand-written HTML served directly from Cloudflare Pages.",
+  "type": "module",
+  "scripts": {
+    "build:graphrag": "node scripts/build-graphrag.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

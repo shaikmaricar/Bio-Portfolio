@@ -1,0 +1,5 @@
+node_modules/
+.playwright-mcp/
+playwright-profile/
+graphrag-mobile-*.png
+graphrag-demo-render.png

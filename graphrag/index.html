@@ -12,7 +12,6 @@
   .boot-spinner{width:32px;height:32px;border:2px solid #1c2333;border-top-color:#38bdf8;border-radius:50%;animation:spin .9s linear infinite}
   .boot-text{font-size:13px;color:#64748b;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;letter-spacing:.04em}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .boot-error{padding:32px;max-width:680px;margin:80px auto;border:1px solid #2e1010;background:#180a0a;border-radius:8px;color:#f87171;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
   .src-footer{position:fixed;bottom:14px;right:18px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;color:#64748b;background:rgba(7,9,15,.85);padding:6px 12px;border:1px solid #1c2333;border-radius:20px;backdrop-filter:blur(6px);z-index:100}
   .src-footer a{color:#38bdf8;text-decoration:none}
   .src-footer a:hover{text-decoration:underline}
@@ -30,58 +29,6 @@
   source: <a href="./graphrag-pipeline.jsx">graphrag-pipeline.jsx</a>
 </div>
 
-<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
-
-<script>
-(async function bootGraphRAGDemo() {
-  const root = document.getElementById('root');
-  const renderError = (msg) => {
-    root.innerHTML = '';
-    const div = document.createElement('div');
-    div.className = 'boot-error';
-    div.textContent = 'GraphRAG demo failed to load.\n\n' + msg + '\n\nThe raw source is still viewable at /graphrag/graphrag-pipeline.jsx.';
-    root.appendChild(div);
-  };
-
-  try {
-    if (!window.React || !window.ReactDOM || !window.Babel) {
-      throw new Error('A required CDN script (React, ReactDOM, or Babel) failed to load. Check your network and retry.');
-    }
-
-    const res = await fetch('./graphrag-pipeline.jsx', { cache: 'no-cache' });
-    if (!res.ok) throw new Error('Could not fetch graphrag-pipeline.jsx (HTTP ' + res.status + ').');
-    let src = await res.text();
-
-    // Babel standalone has no module resolver, so we rewrite the ES module syntax:
-    //   import { useState } from "react";   →  const { useState } = React;
-    //   export default function App         →  function App
-    src = src.replace(
-      /^import\s+\{([^}]+)\}\s+from\s+["']react["'];?\s*$/m,
-      'const {$1} = React;'
-    );
-    src = src.replace(/^export\s+default\s+function\s+(\w+)/m, 'function $1');
-
-    const compiled = window.Babel.transform(src, {
-      presets: ['react'],
-      filename: 'graphrag-pipeline.jsx'
-    }).code;
-
-    // Execute the compiled component code in a scope that has React available,
-    // then return the App component for mounting.
-    const App = new Function('React', compiled + '\nreturn App;')(window.React);
-
-    if (typeof App !== 'function') {
-      throw new Error('Compiled module did not expose an `App` component.');
-    }
-
-    window.ReactDOM.createRoot(root).render(window.React.createElement(App));
-  } catch (err) {
-    console.error('[graphrag-demo]', err);
-    renderError(err && err.message ? err.message : String(err));
-  }
-})();
-</script>
+<script src="./graphrag-pipeline.bundle.js" defer></script>
 </body>
 </html>
