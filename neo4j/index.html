@@ -913,8 +913,10 @@ tr:hover td{background:var(--surface2)}
   <div class="cta-note">Includes fully annotated Cypher scripts, Python embedding pipeline, Weaviate schema, and GraphRAG retriever</div>
   <div class="cta-note" style="margin-top:14px">
     Companion sample project — <em>How to do GraphRAG using Neo4j APOC procedures</em>.
-    View the React artifact source:
-    <a href="/graphrag/graphrag-pipeline.jsx" style="color:var(--cyan)">graphrag-pipeline.jsx</a>
+    Run the live demo at
+    <a href="/graphrag/" style="color:var(--cyan)">/graphrag/</a>
+    or view the
+    <a href="/graphrag/graphrag-pipeline.jsx" style="color:var(--cyan)">React source</a>.
   </div>
 </div>
 
@@ -941,7 +943,7 @@ function openPipeline() {
   if (window.sendPrompt) {
     window.sendPrompt('Open the GraphRAG Pipeline project artifact — the E-Commerce Intelligence Graph sample project');
   } else {
-    window.location.href = '/graphrag/graphrag-pipeline.jsx';
+    window.location.href = '/graphrag/';
   }
 }
 
