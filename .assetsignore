@@ -1,0 +1,25 @@
+# Cloudflare Workers Static Assets — files excluded from deployment.
+# Syntax matches .gitignore. Lives next to the assets root.
+
+# Local dependencies and build tooling — must not be uploaded as assets.
+# (Cloudflare's build runs `npm install`, which pulls in workerd at 119 MiB
+# and trips the 25 MiB per-asset limit if node_modules is included.)
+node_modules/
+package.json
+package-lock.json
+scripts/
+
+# Source-control and tooling metadata
+.git/
+.gitignore
+.claude/
+.playwright-mcp/
+playwright-profile/
+
+# Local test screenshots (development artifacts, not part of the site)
+graphrag-mobile-*.png
+graphrag-demo-render.png
+
+# GraphRAG demo entry shim — only the built bundle is served at runtime.
+# The runnable .jsx source itself stays deployed (linked from the demo footer).
+graphrag/main.jsx
