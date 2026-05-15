@@ -5,11 +5,16 @@
   "description": "Static portfolio site. Holds the local build pipeline for the GraphRAG demo bundle only — the rest of the site is hand-written HTML served directly from Cloudflare Pages.",
   "type": "module",
   "scripts": {
-    "build:graphrag": "node scripts/build-graphrag.mjs"
+    "build:graphrag": "node scripts/build-graphrag.mjs",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "node scripts/precommit-graphrag.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.24.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "simple-git-hooks": "^2.11.1"
   }
 }
